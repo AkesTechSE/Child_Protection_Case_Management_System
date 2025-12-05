@@ -14,15 +14,19 @@ const AuthLayout = ({ children }) => {
         p: 2,
       }}
     >
-      <Container maxWidth="sm">
+      <Container maxWidth="xs"> {/* use xs for tighter form width */}
         <Paper
-          elevation={6}
+          elevation={8}
           sx={{
             p: { xs: 3, sm: 4, md: 5 },
             borderRadius: 3,
             background: 'white',
             position: 'relative',
             overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
             '&::before': {
               content: '""',
               position: 'absolute',
@@ -80,8 +84,8 @@ const AuthLayout = ({ children }) => {
             </Typography>
           </Box>
 
-          {/* Render children directly */}
-          <Box sx={{ position: 'relative', zIndex: 1 }}>
+          {/* Form Content */}
+          <Box sx={{ width: '100%', mt: 2 }}>
             {children}
           </Box>
 
