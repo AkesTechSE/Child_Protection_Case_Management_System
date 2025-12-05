@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Paper,
@@ -25,6 +25,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import useAutoSave from '../../hooks/useAutoSave';
 
 const steps = ['Child Details', 'Perpetrator Details', 'Incident Details', 'Review'];
 
@@ -117,6 +118,38 @@ const RegisterCasePage = () => {
       } finally {
         setLoading(false);
       }
+    },
+  });
+
+  const DRAFT_KEY = 'case_draft_v1';
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
+  // Load draft on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          formik.setValues((prev) => ({ ...prev, ...parsed }));
+          setDraftLoaded(true);
+          toast.success('Loaded saved draft');
+        }
+      }
+    } catch (err) {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-save form values to localStorage (and optionally server via onSave)
+  useAutoSave(formik.values, {
+    key: DRAFT_KEY,
+    delay: 1500,
+    onSave: async (values) => {
+      // Optional: implement server-side draft sync here.
+      // Example (if backend supports drafts):
+      // await caseService.saveDraft(values);
     },
   });
 
