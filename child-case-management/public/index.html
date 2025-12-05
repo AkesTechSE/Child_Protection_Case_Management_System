@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1976d2" />
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="ChildSafe - Case Management System">
+    <meta name="description" content="A secure platform for managing child abuse cases, ensuring child safety and providing comprehensive case management tools for professionals.">
+    <meta name="keywords" content="child protection, case management, abuse reporting, child safety, social work, child welfare">
+    <meta name="author" content="ChildSafe Organization">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://childsafe.example.com/">
+    <meta property="og:title" content="ChildSafe - Case Management System">
+    <meta property="og:description" content="A secure platform for managing child abuse cases, ensuring child safety and providing comprehensive case management tools for professionals.">
+    <meta property="og:image" content="%PUBLIC_URL%/social-image.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://childsafe.example.com/">
+    <meta property="twitter:title" content="ChildSafe - Case Management System">
+    <meta property="twitter:description" content="A secure platform for managing child abuse cases, ensuring child safety and providing comprehensive case management tools for professionals.">
+    <meta property="twitter:image" content="%PUBLIC_URL%/social-image.png">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <!-- Preconnect to external resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- PWA Theme Color -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ChildSafe">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- Security Headers (would be set server-side) -->
+    <!--
+      Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.childsafe.example.com;
+      X-Content-Type-Options: nosniff
+      X-Frame-Options: DENY
+      X-XSS-Protection: 1; mode=block
+      Referrer-Policy: strict-origin-when-cross-origin
+    -->
+    
+    <!-- Title -->
+    <title>ChildSafe - Child Protection Case Management System</title>
+    
+    <!-- Favicon for different devices -->
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png">
+    <link rel="mask-icon" href="%PUBLIC_URL%/safari-pinned-tab.svg" color="#1976d2">
+    
+    <!-- Microsoft Tiles -->
+    <meta name="msapplication-TileColor" content="#1976d2">
+    <meta name="msapplication-config" content="%PUBLIC_URL%/browserconfig.xml">
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "ChildSafe Case Management System",
+      "url": "https://childsafe.example.com",
+      "description": "A secure platform for managing child abuse cases and ensuring child safety",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "ChildSafe Organization",
+        "url": "https://childsafe.example.com"
+      }
+    }
+    </script>
+    
+    <!-- Apple Launch Images (for PWA) -->
+    <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/launch-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/launch-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/launch-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    
+    <!-- Preload critical assets -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style">
+    
+    <style>
+      /* Critical CSS for initial load */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+          'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-color: #f5f7fa;
+      }
+      
+      #root {
+        min-height: 100vh;
+      }
+      
+      /* Loading animation */
+      .app-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <div style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        text-align: center;
+        z-index: 9999;
+      ">
+        <h1 style="margin-bottom: 20px; font-size: 2rem;">JavaScript Required</h1>
+        <p style="margin-bottom: 30px; font-size: 1.2rem; max-width: 600px;">
+          The ChildSafe Case Management System requires JavaScript to function properly. 
+          Please enable JavaScript in your browser settings to continue.
+        </p>
+        <div style="background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 10px; max-width: 600px;">
+          <h3 style="margin-bottom: 15px;">How to enable JavaScript:</h3>
+          <ul style="text-align: left; margin-left: 20px;">
+            <li><strong>Chrome:</strong> Settings → Privacy and Security → Site Settings → JavaScript → Allow</li>
+            <li><strong>Firefox:</strong> about:config → javascript.enabled → true</li>
+            <li><strong>Safari:</strong> Preferences → Security → Enable JavaScript</li>
+            <li><strong>Edge:</strong> Settings → Cookies and site permissions → JavaScript → Allow</li>
+          </ul>
+        </div>
+        <p style="margin-top: 30px; font-size: 0.9rem; opacity: 0.8;">
+          If you continue to experience issues, please contact support at support@childsafe.example.com
+        </p>
+      </div>
+    </noscript>
+    
+    <!-- Loading state (shown before React loads) -->
+    <div id="root">
+      <div class="app-loading">
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+    
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+    
+    <!-- Google Analytics Example (uncomment and add your GA ID) -->
+    <!--
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    -->
+    
+    <!-- Error tracking (Sentry example) -->
+    <!--
+    <script src="https://browser.sentry-cdn.com/7.0.0/bundle.min.js" crossorigin="anonymous"></script>
+    <script>
+      Sentry.init({
+        dsn: "https://your-sentry-dsn@o0.ingest.sentry.io/0",
+        environment: "production",
+        release: "childsafe@1.0.0"
+      });
+    </script>
+    -->
+  </body>
+</html>
