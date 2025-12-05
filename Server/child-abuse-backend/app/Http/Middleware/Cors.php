@@ -9,23 +9,28 @@ class Cors
 {
     public function handle(Request $request, Closure $next)
     {
-        // Handle preflight OPTIONS request
-        if ($request->isMethod('OPTIONS')) {
-            return response('', 200)
-                ->header('Access-Control-Allow-Origin', '*')
+        // Allowed origins (add your React app URL)
+        $allowedOrigins = [
+            'http://localhost:3000',
+            'http://127.0.0.1:3000',
+            'http://localhost:5173', // Vite default
+        ];
+
+        $origin = $request->headers->get('Origin');
+        
+        if (in_array($origin, $allowedOrigins)) {
+            return $next($request)
+                ->header('Access-Control-Allow-Origin', $origin)
                 ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
-                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN')
-                ->header('Access-Control-Allow-Credentials', 'true');
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN, Accept')
+                ->header('Access-Control-Allow-Credentials', 'true')
+                ->header('Access-Control-Max-Age', '86400');
         }
 
-        $response = $next($request);
-        
-        // Add CORS headers to the response
-        $response->headers->set('Access-Control-Allow-Origin', '*');
-        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN');
-        $response->headers->set('Access-Control-Allow-Credentials', 'true');
-        
-        return $response;
+        // For other origins or if origin is not set
+        return $next($request)
+            ->header('Access-Control-Allow-Origin', '*')
+            ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
+            ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN, Accept');
     }
 }

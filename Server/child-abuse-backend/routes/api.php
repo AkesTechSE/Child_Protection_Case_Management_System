@@ -1,21 +1,41 @@
 ﻿<?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CaseController;
+use App\Http\Controllers\Api\DashboardController;
 
-// Simple test route
-Route::get('/', function () {
+// Public routes
+Route::get('/test', function () {
     return response()->json([
-        'message' => 'Child Abuse Case Management System API',
-        'status' => 'running',
-        'version' => '1.0.0',
-        'endpoints' => [
-            'POST /api/login' => 'User login',
-            'GET /api/dashboard/stats' => 'Dashboard statistics',
-            'GET /api/cases' => 'List cases',
-            'POST /api/cases' => 'Create case'
+        'status' => 'success',
+        'message' => 'API connected successfully!',
+        'data' => [
+            'api_version' => '1.0.0',
+            'timestamp' => now(),
+            'endpoints' => [
+                '/api/login' => 'POST - User authentication',
+                '/api/dashboard/stats' => 'GET - Dashboard statistics',
+                '/api/cases' => 'GET - List all cases',
+                '/api/cases' => 'POST - Create new case',
+            ]
         ]
     ]);
 });
 
-// Include the main API routes
-require __DIR__ . '/api-v1.php';
+Route::post('/login', [AuthController::class, 'login']);
+
+// Protected routes
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/profile', [AuthController::class, 'profile']);
+    Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
+    
+    Route::prefix('cases')->group(function () {
+        Route::get('/', [CaseController::class, 'index']);
+        Route::post('/', [CaseController::class, 'store']);
+        Route::put('/{id}', [CaseController::class, 'update']);
+        Route::delete('/{id}', [CaseController::class, 'destroy']);
+        Route::post('/{id}/notes', [CaseController::class, 'addNote']);
+    });
+});
