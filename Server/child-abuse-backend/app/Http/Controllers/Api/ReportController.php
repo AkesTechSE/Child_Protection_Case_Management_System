@@ -81,21 +81,21 @@ class ReportController extends Controller
         $openCases = $cases->whereNotIn('status', ['resolved', 'closed'])->count();
         $closedCases = $cases->whereIn('status', ['resolved', 'closed'])->count();
         
-        $abuseTypeStats = $cases->groupBy('abuse_type')->map(function ($group) {
+        $abuseTypeStats = $cases->groupBy('abuse_type')->map(function ($group) use ($totalCases) {
             return [
                 'count' => $group->count(),
                 'percentage' => $group->count() > 0 ? round(($group->count() / $totalCases) * 100, 2) : 0
             ];
         });
 
-        $statusStats = $cases->groupBy('status')->map(function ($group) {
+        $statusStats = $cases->groupBy('status')->map(function ($group) use ($totalCases) {
             return [
                 'count' => $group->count(),
                 'percentage' => $group->count() > 0 ? round(($group->count() / $totalCases) * 100, 2) : 0
             ];
         });
 
-        $priorityStats = $cases->groupBy('priority')->map(function ($group) {
+        $priorityStats = $cases->groupBy('priority')->map(function ($group) use ($totalCases) {
             return [
                 'count' => $group->count(),
                 'percentage' => $group->count() > 0 ? round(($group->count() / $totalCases) * 100, 2) : 0
@@ -225,8 +225,8 @@ class ReportController extends Controller
         $end = $request->input('end_date', now()->toDateString());
 
         $perpetrators = Perpetrator::whereHas('cases', function ($query) use ($start, $end) {
-                $query->whereDate('created_at', '>=', $start)
-                      ->whereDate('created_at', '<=', $end);
+            $query->whereDate('abuse_cases.created_at', '>=', $start)
+                  ->whereDate('abuse_cases.created_at', '<=', $end);
             })
             ->with(['cases:id,case_number,case_title,abuse_type'])
             ->get();

@@ -19,6 +19,8 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->string('occupation')->nullable();
             $table->string('relationship_to_victim')->nullable();
+            $table->string('fan_number', 50)->nullable(); // Added
+            $table->string('fin_number', 50)->nullable(); // Added
             $table->boolean('previous_records')->default(false);
             $table->text('description')->nullable();
             $table->json('additional_info')->nullable();

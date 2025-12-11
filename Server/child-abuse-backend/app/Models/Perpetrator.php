@@ -19,6 +19,8 @@ class Perpetrator extends Model
         'address',
         'occupation',
         'relationship_to_victim',
+        'fan_number',    // Added
+        'fin_number',    // Added
         'previous_records',
         'description',
         'additional_info',

@@ -21,6 +21,7 @@
     "axios": "^1.6.2",
     "chart.js": "^4.4.1",
     "date-fns": "^2.30.0",
+    "dayjs": "^1.11.19",
     "formik": "^2.4.5",
     "framer-motion": "^12.23.25",
     "notistack": "^3.0.1",

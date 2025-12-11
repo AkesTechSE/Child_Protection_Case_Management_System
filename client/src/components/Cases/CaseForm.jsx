@@ -10,22 +10,14 @@ import {
   FormControl,
   InputLabel,
   Select,
-  Box,
-  Chip,
-  Autocomplete,
   Alert,
 } from '@mui/material'
 import { useFormik } from 'formik'
 import * as yup from 'yup'
 import { userApi } from '../../api/users'
 import { perpetratorApi } from '../../api/perpetrators'
-import { 
-  ABUSE_TYPES, 
-  PRIORITY_LEVELS, 
-  CASE_STATUS,
-  formatAbuseType,
-  formatCaseStatus 
-} from '../../utils/constants'
+import { caseApi } from '../../api/cases'
+import { ABUSE_TYPES, PRIORITY_LEVELS, CASE_STATUS, formatAbuseType, formatCaseStatus } from '../../utils/constants'
 
 const validationSchema = yup.object({
   case_title: yup.string().required('Case title is required'),
@@ -38,7 +30,7 @@ const validationSchema = yup.object({
   assigned_to: yup.number().nullable(),
 })
 
-const CaseForm = ({ initialData, onSubmit, onCancel }) => {
+const CaseForm = ({ initialData, onCancel, onSaved }) => {
   const [focalPersons, setFocalPersons] = useState([])
   const [perpetrators, setPerpetrators] = useState([])
   const [loading, setLoading] = useState(false)
@@ -54,8 +46,8 @@ const CaseForm = ({ initialData, onSubmit, onCancel }) => {
         userApi.getFocalPersons(),
         perpetratorApi.getPerpetrators({ per_page: 100 }),
       ])
-      setFocalPersons(personsResponse.data || [])
-      setPerpetrators(perpsResponse.data || [])
+      setFocalPersons(personsResponse || [])
+      setPerpetrators(perpsResponse || [])
     } catch (err) {
       console.error('Failed to fetch data:', err)
     }
@@ -79,7 +71,12 @@ const CaseForm = ({ initialData, onSubmit, onCancel }) => {
       setError('')
       setLoading(true)
       try {
-        await onSubmit(values)
+        if (initialData) {
+          await caseApi.updateCase(initialData.id, values)
+        } else {
+          await caseApi.createCase(values)
+        }
+        onSaved && onSaved()
         onCancel()
       } catch (err) {
         setError(err.message || 'Failed to save case')
@@ -89,7 +86,6 @@ const CaseForm = ({ initialData, onSubmit, onCancel }) => {
     },
   })
 
-  // Use constants instead of hardcoded arrays
   const abuseTypes = Object.values(ABUSE_TYPES)
   const priorities = Object.values(PRIORITY_LEVELS)
   const statuses = Object.values(CASE_STATUS)
@@ -99,7 +95,7 @@ const CaseForm = ({ initialData, onSubmit, onCancel }) => {
       <DialogTitle>{initialData ? 'Edit Case' : 'Create New Case'}</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        
+
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid item xs={12}>
             <TextField
@@ -113,6 +109,7 @@ const CaseForm = ({ initialData, onSubmit, onCancel }) => {
               required
             />
           </Grid>
+
           <Grid item xs={12}>
             <TextField
               fullWidth
@@ -124,6 +121,7 @@ const CaseForm = ({ initialData, onSubmit, onCancel }) => {
               onChange={formik.handleChange}
             />
           </Grid>
+
           <Grid item xs={12} md={6}>
             <FormControl fullWidth>
               <InputLabel>Abuse Type *</InputLabel>
@@ -135,13 +133,12 @@ const CaseForm = ({ initialData, onSubmit, onCancel }) => {
                 label="Abuse Type *"
               >
                 {abuseTypes.map((type) => (
-                  <MenuItem key={type} value={type}>
-                    {formatAbuseType(type)}
-                  </MenuItem>
+                  <MenuItem key={type} value={type}>{formatAbuseType(type)}</MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
+
           <Grid item xs={12} md={6}>
             <FormControl fullWidth>
               <InputLabel>Priority</InputLabel>
@@ -151,14 +148,13 @@ const CaseForm = ({ initialData, onSubmit, onCancel }) => {
                 onChange={formik.handleChange}
                 label="Priority"
               >
-                {priorities.map((priority) => (
-                  <MenuItem key={priority} value={priority}>
-                    {priority.charAt(0).toUpperCase() + priority.slice(1)}
-                  </MenuItem>
+                {priorities.map((p) => (
+                  <MenuItem key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
+
           <Grid item xs={12} md={6}>
             <FormControl fullWidth>
               <InputLabel>Severity</InputLabel>
@@ -168,14 +164,13 @@ const CaseForm = ({ initialData, onSubmit, onCancel }) => {
                 onChange={formik.handleChange}
                 label="Severity"
               >
-                {priorities.map((severity) => (
-                  <MenuItem key={severity} value={severity}>
-                    {severity.charAt(0).toUpperCase() + severity.slice(1)}
-                  </MenuItem>
+                {priorities.map((s) => (
+                  <MenuItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
+
           <Grid item xs={12} md={6}>
             <FormControl fullWidth>
               <InputLabel>Status</InputLabel>
@@ -185,21 +180,17 @@ const CaseForm = ({ initialData, onSubmit, onCancel }) => {
                 onChange={formik.handleChange}
                 label="Status"
               >
-                {statuses.map((status) => (
-                  <MenuItem key={status} value={status}>
-                    {formatCaseStatus(status)}
-                  </MenuItem>
+                {statuses.map((s) => (
+                  <MenuItem key={s} value={s}>{formatCaseStatus(s)}</MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
-          {/* ... rest of the form ... */}
         </Grid>
       </DialogContent>
+
       <DialogActions>
-        <Button onClick={onCancel} disabled={loading}>
-          Cancel
-        </Button>
+        <Button onClick={onCancel} disabled={loading}>Cancel</Button>
         <Button type="submit" variant="contained" disabled={loading}>
           {loading ? 'Saving...' : initialData ? 'Update' : 'Create'}
         </Button>

@@ -1,181 +1,250 @@
 import {
+  Box,
+  Button,
+  Grid,
+  TextField,
+  MenuItem,
+  Typography,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
-  TextField,
-  Grid,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Select,
-} from '@mui/material'
-import { useFormik } from 'formik'
-import * as yup from 'yup'
+} from "@mui/material";
+import { useState, useEffect } from "react";
+import dayjs from "dayjs";
 
-const validationSchema = yup.object({
-  first_name: yup.string().required('First name is required'),
-  last_name: yup.string().required('Last name is required'),
-  gender: yup.string().required('Gender is required'),
-  case_id: yup.number().required('Case ID is required'),
-})
+const genders = ["male", "female", "other"];
+const relationshipOptions = [
+  "Parent",
+  "Stepparent",
+  "Grandparent",
+  "Relative",
+  "Babysitter",
+  "Teacher",
+  "Stranger",
+];
 
-const VictimForm = ({ initialData, onSubmit, onCancel, cases }) => {
-  const formik = useFormik({
-    initialValues: initialData || {
-      first_name: '',
-      last_name: '',
-      gender: '',
-      age: '',
-      date_of_birth: '',
-      contact_number: '',
-      address: '',
-      relationship_to_perpetrator: '',
-      case_id: '',
-    },
-    validationSchema,
-    onSubmit: async (values, { setSubmitting }) => {
-      try {
-        await onSubmit(values)
-        onCancel()
-      } catch (error) {
-        console.error('Failed to save victim:', error)
-      } finally {
-        setSubmitting(false)
-      }
-    },
-  })
+const VictimForm = ({ initialData, cases = [], onSubmit, onCancel }) => {
+  const [form, setForm] = useState({
+    case_id: "",
+    first_name: "",
+    last_name: "",
+    gender: "",
+    age: "",
+    date_of_birth: "",
+    contact_number: "",
+    address: "",
+    relationship_to_perpetrator: "",
+    description: "",
+    additional_info: "",
+  });
 
-  const genderOptions = [
-    { value: 'male', label: 'Male' },
-    { value: 'female', label: 'Female' },
-    { value: 'other', label: 'Other' },
-  ]
+  useEffect(() => {
+    if (initialData) {
+      const normalizedRelationship = initialData.relationship_to_perpetrator
+        ? relationshipOptions.find(
+            (option) =>
+              option.toLowerCase() ===
+              initialData.relationship_to_perpetrator.toLowerCase()
+          ) || initialData.relationship_to_perpetrator
+        : "";
+
+      setForm({
+        ...initialData,
+        date_of_birth: initialData.date_of_birth
+          ? dayjs(initialData.date_of_birth).format("YYYY-MM-DD")
+          : "",
+        relationship_to_perpetrator: normalizedRelationship,
+      });
+    }
+  }, [initialData]);
+
+  const handleChange = (e) => {
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const submitForm = () => {
+    onSubmit(form);
+  };
 
   return (
-    <form onSubmit={formik.handleSubmit}>
-      <DialogTitle>{initialData ? 'Edit Victim' : 'Add Victim'}</DialogTitle>
-      <DialogContent>
-        <Grid container spacing={2} sx={{ mt: 1 }}>
+    <>
+      <DialogTitle>
+        {initialData ? "Update Victim" : "Create New Victim"}
+      </DialogTitle>
+
+      <DialogContent dividers>
+        <Grid container spacing={2}>
+
+          {/* CASE DROPDOWN */}
+          <Grid item xs={12}>
+            <TextField
+              label="Case"
+              name="case_id"
+              select
+              fullWidth
+              value={form.case_id}
+              onChange={handleChange}
+              required
+            >
+              {cases.map((c) => (
+                <MenuItem key={c.id} value={c.id}>
+                  {c.case_number} - {c.case_title}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          {/* FIRST NAME */}
           <Grid item xs={12} md={6}>
             <TextField
-              fullWidth
-              name="first_name"
               label="First Name"
-              value={formik.values.first_name}
-              onChange={formik.handleChange}
-              error={formik.touched.first_name && Boolean(formik.errors.first_name)}
-              helperText={formik.touched.first_name && formik.errors.first_name}
+              name="first_name"
+              fullWidth
+              value={form.first_name}
+              onChange={handleChange}
               required
             />
           </Grid>
+
+          {/* LAST NAME */}
           <Grid item xs={12} md={6}>
             <TextField
-              fullWidth
-              name="last_name"
               label="Last Name"
-              value={formik.values.last_name}
-              onChange={formik.handleChange}
-              error={formik.touched.last_name && Boolean(formik.errors.last_name)}
-              helperText={formik.touched.last_name && formik.errors.last_name}
+              name="last_name"
+              fullWidth
+              value={form.last_name}
+              onChange={handleChange}
               required
             />
           </Grid>
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>Gender *</InputLabel>
-              <Select
-                name="gender"
-                value={formik.values.gender}
-                onChange={formik.handleChange}
-                error={formik.touched.gender && Boolean(formik.errors.gender)}
-                label="Gender *"
-              >
-                {genderOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
+
+          {/* GENDER */}
           <Grid item xs={12} md={6}>
             <TextField
+              label="Gender"
+              name="gender"
+              select
               fullWidth
-              name="age"
+              value={form.gender}
+              onChange={handleChange}
+              required
+            >
+              {genders.map((g) => (
+                <MenuItem key={g} value={g}>
+                  {g}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          {/* AGE */}
+          <Grid item xs={12} md={6}>
+            <TextField
               label="Age"
+              name="age"
               type="number"
-              value={formik.values.age}
-              onChange={formik.handleChange}
+              fullWidth
+              value={form.age}
+              onChange={handleChange}
             />
           </Grid>
+
+          {/* DOB */}
           <Grid item xs={12} md={6}>
             <TextField
-              fullWidth
-              type="date"
-              name="date_of_birth"
               label="Date of Birth"
-              value={formik.values.date_of_birth}
-              onChange={formik.handleChange}
+              name="date_of_birth"
+              type="date"
+              fullWidth
+              value={form.date_of_birth}
+              onChange={handleChange}
               InputLabelProps={{ shrink: true }}
             />
           </Grid>
+
+          {/* CONTACT NUMBER */}
           <Grid item xs={12} md={6}>
             <TextField
-              fullWidth
-              name="contact_number"
               label="Contact Number"
-              value={formik.values.contact_number}
-              onChange={formik.handleChange}
+              name="contact_number"
+              fullWidth
+              value={form.contact_number}
+              onChange={handleChange}
             />
           </Grid>
+
+          {/* ADDRESS */}
           <Grid item xs={12}>
             <TextField
-              fullWidth
-              name="address"
               label="Address"
-              value={formik.values.address}
-              onChange={formik.handleChange}
+              name="address"
+              fullWidth
+              value={form.address}
+              onChange={handleChange}
+              multiline
+              rows={2}
             />
           </Grid>
+
+          {/* RELATIONSHIP */}
           <Grid item xs={12}>
             <TextField
-              fullWidth
-              name="relationship_to_perpetrator"
               label="Relationship to Perpetrator"
-              value={formik.values.relationship_to_perpetrator}
-              onChange={formik.handleChange}
+              name="relationship_to_perpetrator"
+              select
+              fullWidth
+              value={form.relationship_to_perpetrator}
+              onChange={handleChange}
+              helperText="Select how the victim is related to the perpetrator"
+            >
+              <MenuItem value="">Select relationship</MenuItem>
+              {relationshipOptions.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          {/* DESCRIPTION */}
+          <Grid item xs={12}>
+            <TextField
+              label="Description"
+              name="description"
+              fullWidth
+              multiline
+              rows={3}
+              value={form.description}
+              onChange={handleChange}
             />
           </Grid>
+
+          {/* ADDITIONAL INFO */}
           <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Case *</InputLabel>
-              <Select
-                name="case_id"
-                value={formik.values.case_id}
-                onChange={formik.handleChange}
-                error={formik.touched.case_id && Boolean(formik.errors.case_id)}
-                label="Case *"
-              >
-                <MenuItem value="">Select a case</MenuItem>
-                {cases.map((caseItem) => (
-                  <MenuItem key={caseItem.id} value={caseItem.id}>
-                    {caseItem.case_number} - {caseItem.case_title}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <TextField
+              label="Additional Info"
+              name="additional_info"
+              fullWidth
+              multiline
+              rows={3}
+              value={form.additional_info}
+              onChange={handleChange}
+            />
           </Grid>
         </Grid>
       </DialogContent>
+
       <DialogActions>
         <Button onClick={onCancel}>Cancel</Button>
-        <Button type="submit" variant="contained">
-          {initialData ? 'Update' : 'Create'}
+        <Button variant="contained" onClick={submitForm}>
+          {initialData ? "Update" : "Create"}
         </Button>
       </DialogActions>
-    </form>
-  )
-}
+    </>
+  );
+};
 
-export default VictimForm
+export default VictimForm;

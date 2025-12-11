@@ -25,21 +25,29 @@ const ProfilePage = () => {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
+  // Update profile
   const handleUpdateProfile = async () => {
     setLoading(true)
     setMessage('')
     setError('')
     try {
       const response = await authApi.updateProfile({ name, email })
-      dispatch(updateUser(response.data))
+      dispatch(updateUser(response))
       setMessage('Profile updated successfully')
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update profile')
+      // Show Laravel validation errors if available
+      if (err.errors) {
+        const messages = Object.values(err.errors).flat().join(' ')
+        setError(messages)
+      } else {
+        setError(err.message || 'Failed to update profile')
+      }
     } finally {
       setLoading(false)
     }
   }
 
+  // Change password
   const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
       setError('New passwords do not match')
@@ -60,7 +68,12 @@ const ProfilePage = () => {
       setNewPassword('')
       setConfirmPassword('')
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to change password')
+      if (err.errors) {
+        const messages = Object.values(err.errors).flat().join(' ')
+        setError(messages)
+      } else {
+        setError(err.message || 'Failed to change password')
+      }
     } finally {
       setLoading(false)
     }
@@ -73,16 +86,17 @@ const ProfilePage = () => {
       </Typography>
 
       <Grid container spacing={3}>
+        {/* Personal Info */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Personal Information
             </Typography>
             <Divider sx={{ mb: 3 }} />
-            
+
             {message && <Alert severity="success" sx={{ mb: 2 }}>{message}</Alert>}
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-            
+
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
@@ -110,7 +124,7 @@ const ProfilePage = () => {
                 />
               </Grid>
             </Grid>
-            
+
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 variant="contained"
@@ -123,13 +137,14 @@ const ProfilePage = () => {
           </Paper>
         </Grid>
 
+        {/* Change Password */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Change Password
             </Typography>
             <Divider sx={{ mb: 3 }} />
-            
+
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
@@ -159,7 +174,7 @@ const ProfilePage = () => {
                 />
               </Grid>
             </Grid>
-            
+
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 variant="contained"

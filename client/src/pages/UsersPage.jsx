@@ -111,6 +111,7 @@ const UsersPage = () => {
     try {
       await api.post('/users', formData)
       setSuccess('User created successfully')
+      setSelectedUser(null)
       setOpenForm(false)
       fetchUsers()
     } catch (err) {
@@ -184,15 +185,20 @@ const UsersPage = () => {
     )
   })
 
+  const buildInitialFormValues = (data) => ({
+    name: data?.name || '',
+    email: data?.email || '',
+    password: '',
+    password_confirmation: '',
+    role: data?.role || 'focal_person',
+    is_active: typeof data?.is_active === 'boolean' ? data.is_active : true,
+  })
+
   const UserForm = ({ initialData, onSubmit, onCancel }) => {
-    const [formData, setFormData] = useState(initialData || {
-      name: '',
-      email: '',
-      password: '',
-      password_confirmation: '',
-      role: 'focal_person',
-      is_active: true,
-    })
+    const [formData, setFormData] = useState(() => buildInitialFormValues(initialData))
+    useEffect(() => {
+      setFormData(buildInitialFormValues(initialData))
+    }, [initialData])
     const [formError, setFormError] = useState('')
     const [submitting, setSubmitting] = useState(false)
 
@@ -210,17 +216,25 @@ const UsersPage = () => {
       setFormError('')
       
       try {
-        // Remove password confirmation from API call
-        const { password_confirmation, ...submitData } = formData
-        
-        // Only include password if provided (for updates)
-        if (initialData && !submitData.password) {
-          delete submitData.password
+        if ((formData.password || formData.password_confirmation) && formData.password !== formData.password_confirmation) {
+          setFormError('Passwords do not match')
+          setSubmitting(false)
+          return
         }
-        
+
+        const submitData = { ...formData }
+
+        if (initialData) {
+          if (!submitData.password) {
+            delete submitData.password
+            delete submitData.password_confirmation
+          }
+        }
+
         await onSubmit(submitData)
       } catch (err) {
-        setFormError(err.message || 'Failed to save user')
+        const apiErrors = err?.errors ? Object.values(err.errors).flat() : []
+        setFormError(apiErrors[0] || err.message || 'Failed to save user')
       } finally {
         setSubmitting(false)
       }
@@ -393,7 +407,10 @@ const UsersPage = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => setOpenForm(true)}
+          onClick={() => {
+            setSelectedUser(null)
+            setOpenForm(true)
+          }}
         >
           New User
         </Button>
@@ -575,6 +592,7 @@ const UsersPage = () => {
         setSelectedUser(null)
       }} maxWidth="sm" fullWidth>
         <UserForm
+          key={selectedUser ? selectedUser.id : 'new-user'}
           initialData={selectedUser}
           onSubmit={selectedUser ? 
             (data) => handleUpdateUser(selectedUser.id, data) :

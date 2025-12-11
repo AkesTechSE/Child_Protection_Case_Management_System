@@ -6,7 +6,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-  }
+  },
 })
 
 // Request interceptor to add token
@@ -35,19 +35,19 @@ api.interceptors.response.use(
     const errorData = {
       message: errorMessage,
       status: error.response?.status,
-      data: error.response?.data,
-      original: error
+      errors: error.response?.data?.errors || null,
+      original: error,
     }
-    
+
     console.error('API Error:', errorData)
-    
-    // Handle specific errors
+
+    // Handle unauthorized (token expired)
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'
     }
-    
+
     return Promise.reject(errorData)
   }
 )
