@@ -8,6 +8,8 @@ use App\Models\AbuseCase;
 use App\Models\Perpetrator;
 use App\Models\CaseNote;
 use App\Models\CaseHistory;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
@@ -46,6 +48,7 @@ class CaseController extends Controller
     public function store(Request $request)
     {
         $rules = [
+            'case_number' => ['nullable', 'string', 'max:255', 'unique:abuse_cases,case_number'],
             'case_title' => ['required','string','max:255'],
             'case_description' => ['nullable','string'],
             'abuse_type' => ['required', Rule::in(['sexual_abuse','physical_abuse','emotional_abuse','neglect','exploitation','other'])],
@@ -63,10 +66,29 @@ class CaseController extends Controller
         $data = $request->validate($rules);
 
         // Generate unique case number if not provided
-        $caseNumber = $request->input('case_number') ?? 'C-' . strtoupper(Str::random(8));
-        $data['case_number'] = $caseNumber;
+        if (empty($data['case_number'])) {
+            $attempts = 0;
+            do {
+                $attempts++;
+                $candidate = 'C-' . strtoupper(Str::random(8));
+            } while ($attempts < 5 && AbuseCase::where('case_number', $candidate)->exists());
 
-        $case = AbuseCase::create($data);
+            $data['case_number'] = $candidate;
+        }
+
+        try {
+            $case = AbuseCase::create($data);
+        } catch (QueryException $e) {
+            // MySQL duplicate key error: 1062 (SQLSTATE 23000)
+            $driverErrorCode = $e->errorInfo[1] ?? null;
+            if ($driverErrorCode === 1062) {
+                return response()->json([
+                    'message' => 'Case number already exists. Please use a different case number.',
+                ], 409);
+            }
+
+            throw $e;
+        }
 
         // attach perpetrators if present
         if (!empty($data['perpetrator_ids'])) {
@@ -134,7 +156,22 @@ class CaseController extends Controller
     public function destroy(Request $request, $id)
     {
         $case = AbuseCase::findOrFail($id);
-        $case->delete();
+
+        // AbuseCase uses SoftDeletes + case_number has a unique index.
+        // If we only soft-delete, the old record still holds the case_number and prevents reuse.
+        // So we first "release" the case_number by changing it to a unique archived value,
+        // then soft-delete.
+        DB::transaction(function () use ($case) {
+            $original = $case->case_number;
+            $released = $original
+                ? ($original . '__deleted__' . $case->id . '__' . now()->format('YmdHis'))
+                : ('DELETED__' . $case->id . '__' . now()->format('YmdHis'));
+
+            $case->case_number = $released;
+            $case->save();
+
+            $case->delete();
+        });
 
         CaseHistory::create([
             'case_id' => $id,

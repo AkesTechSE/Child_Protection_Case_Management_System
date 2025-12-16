@@ -114,7 +114,7 @@ class IncidentController extends Controller
             'report_datetime' => 'sometimes|date',
             'incident_datetime' => 'sometimes|date',
             'incident_end_datetime' => 'nullable|date|after_or_equal:incident_datetime',
-            'location' => 'sometimes|string|max:255',
+            'location' => 'sometimes|required|string|max:255',
             'location_type' => [
                 'sometimes',
                 Rule::in(['home', 'school', 'online', 'public_place', 'other'])

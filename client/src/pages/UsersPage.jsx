@@ -272,11 +272,6 @@ const UsersPage = () => {
     }
 
     const handleSubmit = async (e) => {
-
-              // Directors can only create/edit focal persons
-              if (isDirector && !canManageAll) {
-                payload.role = 'focal_person'
-              }
       e.preventDefault()
       setSubmitting(true)
       setFormError('')
@@ -290,6 +285,11 @@ const UsersPage = () => {
 
         const submitData = { ...formData }
 
+        // Directors can only create/edit focal persons
+        if (isDirector && !canManageAll) {
+          submitData.role = 'focal_person'
+        }
+
         if (initialData) {
           if (!submitData.password) {
             delete submitData.password
@@ -299,8 +299,13 @@ const UsersPage = () => {
 
         await onSubmit(submitData)
       } catch (err) {
+        console.error('User save failed:', {
+          status: err?.status,
+          message: err?.message,
+          errors: err?.errors,
+        })
         const apiErrors = err?.errors ? Object.values(err.errors).flat() : []
-        setFormError(apiErrors[0] || err.message || 'Failed to save user')
+        setFormError(apiErrors[0] || err?.message || 'Failed to save user')
       } finally {
         setSubmitting(false)
       }

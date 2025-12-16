@@ -150,6 +150,22 @@ class ReportController extends Controller
             ],
             'monthly_trend' => $monthlyTrend,
             'cases' => $cases->map(function ($case) {
+                $incidentDate = null;
+
+                if ($case->incident_date) {
+                    // Casted to Carbon via model, normalize to YYYY-MM-DD
+                    $incidentDate = $case->incident_date->toDateString();
+                } else {
+                    // Fallback: derive from earliest incident record if present
+                    $firstIncident = $case->incidents
+                        ? $case->incidents->sortBy('incident_datetime')->first()
+                        : null;
+
+                    if ($firstIncident && $firstIncident->incident_datetime) {
+                        $incidentDate = Carbon::parse($firstIncident->incident_datetime)->toDateString();
+                    }
+                }
+
                 return [
                     'id' => $case->id,
                     'case_number' => $case->case_number,
@@ -167,7 +183,7 @@ class ReportController extends Controller
                     'perpetrators_count' => $case->perpetrators->count(),
                     'incidents_count' => $case->incidents->count(),
                     'created_at' => $case->created_at->toDateTimeString(),
-                    'incident_date' => $case->incident_date,
+                    'incident_date' => $incidentDate,
                     'location' => $case->location
                 ];
             }),
@@ -313,13 +329,14 @@ class ReportController extends Controller
             ->get();
 
         $victims = Victim::whereHas('case', function ($query) use ($start, $end) {
-            $query->whereDate('created_at', '>=', $start)
-                  ->whereDate('created_at', '<=', $end);
+            $query->whereDate('abuse_cases.created_at', '>=', $start)
+                  ->whereDate('abuse_cases.created_at', '<=', $end);
         })->get();
 
         $perpetrators = Perpetrator::whereHas('cases', function ($query) use ($start, $end) {
-            $query->whereDate('created_at', '>=', $start)
-                  ->whereDate('created_at', '<=', $end);
+            // Fully qualify to avoid ambiguity when the relationship joins pivot tables with timestamps.
+            $query->whereDate('abuse_cases.created_at', '>=', $start)
+                  ->whereDate('abuse_cases.created_at', '<=', $end);
         })->get();
 
         $incidents = Incident::whereDate('incident_datetime', '>=', $start)

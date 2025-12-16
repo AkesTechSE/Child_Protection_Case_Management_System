@@ -19,6 +19,8 @@ import PersonIcon from '@mui/icons-material/Person'
 import ExpandLess from '@mui/icons-material/ExpandLess'
 import ExpandMore from '@mui/icons-material/ExpandMore'
 import ChildCareIcon from '@mui/icons-material/ChildCare'
+import { useSelector } from 'react-redux'
+import { DASHBOARD_ROLES, REPORTS_ROLES } from '../../utils/constants'
 
 const drawerWidth = 240
 
@@ -27,8 +29,12 @@ const Sidebar = () => {
   const location = useLocation()
   const [openCases, setOpenCases] = useState(false)
 
+  const { user } = useSelector((state) => state.auth)
+
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+    ...(DASHBOARD_ROLES.includes(user?.role)
+      ? [{ text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' }]
+      : []),
     { 
       text: 'Cases', 
       icon: <AssignmentIcon />, 
@@ -42,8 +48,12 @@ const Sidebar = () => {
     { text: 'Perpetrators', icon: <GavelIcon />, path: '/perpetrators' },
     { text: 'Children', icon: <ChildCareIcon />, path: '/children' },
     { text: 'Incidents', icon: <ReportIcon />, path: '/incidents' },
-    { text: 'Reports', icon: <ReportIcon />, path: '/reports' },
-    { text: 'Users', icon: <PersonIcon />, path: '/users' },
+    ...(REPORTS_ROLES.includes(user?.role)
+      ? [{ text: 'Reports', icon: <ReportIcon />, path: '/reports' }]
+      : []),
+    ...((user?.role === 'system_admin' || user?.role === 'admin' || user?.role === 'director')
+      ? [{ text: user?.role === 'director' ? 'Focal Persons' : 'Users', icon: <PersonIcon />, path: '/users' }]
+      : []),
   ]
 
   const isActive = (path) => location.pathname === path

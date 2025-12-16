@@ -41,6 +41,17 @@ export const USER_ROLES = {
   FOCAL_PERSON: 'focal_person',
 }
 
+// Roles allowed to access the Dashboard
+export const DASHBOARD_ROLES = ['system_admin', 'admin', 'director', 'focal_person']
+
+// Roles allowed to access the Reports section
+export const REPORTS_ROLES = ['system_admin', 'admin', 'director']
+
+// Compute the most appropriate landing route for a given role
+export const getHomeRouteForRole = (role) => {
+  return DASHBOARD_ROLES.includes(role) ? '/dashboard' : '/cases'
+}
+
 export const GENDER_OPTIONS = [
   { value: 'male', label: 'Male' },
   { value: 'female', label: 'Female' },

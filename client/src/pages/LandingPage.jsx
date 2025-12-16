@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useDispatch } from "react-redux"
 import { Box, Container, Typography, Grid, Card, CardContent, Button, Stack, TextField, Alert, Divider } from "@mui/material"
@@ -9,6 +9,7 @@ import PeopleIcon from "@mui/icons-material/People"
 import MapIcon from "@mui/icons-material/Map"
 import { authApi } from "../api/auth"
 import { setCredentials } from "../store/authSlice"
+import { getHomeRouteForRole } from "../utils/constants"
 
 const LandingPage = () => {
   const theme = useTheme()
@@ -40,6 +41,12 @@ const LandingPage = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [fieldErrors, setFieldErrors] = useState({ email: "", password: "" })
+
+  useEffect(() => {
+    if (!error) return
+    const t = setTimeout(() => setError(""), 3000)
+    return () => clearTimeout(t)
+  }, [error])
 
   const normalizeEmail = (value) => (value || "").trim().toLowerCase()
   const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
@@ -82,13 +89,9 @@ const LandingPage = () => {
         throw new Error("Invalid response from server")
       }
       dispatch(setCredentials({ user: data.user, token: data.token }))
-      navigate("/dashboard")
+      navigate(getHomeRouteForRole(data.user?.role))
     } catch (err) {
-      if (err?.status === 503) {
-        setError("Service temporarily unavailable. Please try again later.")
-      } else {
-        setError(err?.message || "Login failed. Please check credentials.")
-      }
+      setError(err?.message || "Login failed. Please check credentials.")
     } finally {
       setLoading(false)
     }

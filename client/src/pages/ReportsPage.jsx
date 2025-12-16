@@ -50,6 +50,29 @@ const ReportsPage = () => {
   const [error, setError] = useState('')
   const [tabValue, setTabValue] = useState(0)
 
+  const buildComprehensiveRows = (data) => {
+    const summary = data?.summary || {}
+    const period = summary?.period || {}
+
+    const cases = summary?.cases || {}
+    const victims = summary?.victims || {}
+    const perpetrators = summary?.perpetrators || {}
+    const incidents = summary?.incidents || {}
+
+    return [
+      ['Period Start', period.start_date || ''],
+      ['Period End', period.end_date || ''],
+      ['Cases - Total', cases.total ?? ''],
+      ['Cases - Open', cases.open ?? ''],
+      ['Cases - Closed', cases.closed ?? ''],
+      ['Victims - Total', victims.total ?? ''],
+      ['Victims - Average Age', victims.average_age ?? ''],
+      ['Perpetrators - Total', perpetrators.total ?? ''],
+      ['Perpetrators - With Previous Records', perpetrators.with_previous_records ?? ''],
+      ['Incidents - Total', incidents.total ?? ''],
+    ]
+  }
+
   const generateReport = async () => {
     // Cancel any in-flight request to avoid blocking and stale updates
     if (abortRef.current) {
@@ -79,7 +102,8 @@ const ReportsPage = () => {
       let data
       if (tabValue === 0) data = await reportApi.generateCasesReport(params, { signal: abortRef.current.signal })
       else if (tabValue === 1) data = await reportApi.generateVictimsReport(params, { signal: abortRef.current.signal })
-      else data = await reportApi.generatePerpetratorsReport(params, { signal: abortRef.current.signal })
+      else if (tabValue === 2) data = await reportApi.generatePerpetratorsReport(params, { signal: abortRef.current.signal })
+      else data = await reportApi.generateComprehensiveReport(params, { signal: abortRef.current.signal })
 
       const normalizedVictims = (data?.victims || []).map(victim => ({
         fullName: buildFullName(victim.first_name, victim.last_name),
@@ -105,7 +129,8 @@ const ReportsPage = () => {
       setReportData({
         cases: data?.cases || [],
         victims: normalizedVictims,
-        perpetrators: normalizedPerpetrators
+        perpetrators: normalizedPerpetrators,
+        comprehensive: tabValue === 3 ? data : null,
       })
     } catch (err) {
       // Handle cancellation quietly
@@ -127,7 +152,7 @@ const ReportsPage = () => {
       else if (status === 422) message = validationDetails ? `${baseMessage} ${validationDetails}` : baseMessage
 
       setError(message)
-      setReportData({ cases: [], victims: [], perpetrators: [] })
+      setReportData({ cases: [], victims: [], perpetrators: [], comprehensive: null })
     } finally {
       setLoading(false)
     }
@@ -157,7 +182,7 @@ const ReportsPage = () => {
         v.case_number || '',
         v.abuse_type?.replace('_', ' ') || '',
       ])
-    } else {
+    } else if (tabValue === 2) {
       headers = ['Perpetrator Name', 'Age', 'Gender', 'Case Number', 'Abuse Type']
       rows = reportData.perpetrators.map(p => [
         p.fullName || '',
@@ -166,6 +191,23 @@ const ReportsPage = () => {
         p.case_number || '',
         p.abuse_type?.replace('_', ' ') || '',
       ])
+    } else {
+      const comp = reportData.comprehensive
+      if (!comp) return alert('No system report data to export.')
+
+      headers = ['Metric', 'Value']
+      rows = buildComprehensiveRows(comp)
+
+      const casesByMonth = comp?.summary?.timeline?.cases_by_month || {}
+      const monthEntries = Object.entries(casesByMonth)
+        .sort(([a], [b]) => a.localeCompare(b))
+
+      if (monthEntries.length) {
+        rows.push(['', ''])
+        rows.push(['Cases By Month', ''])
+        rows.push(['Month', 'Cases'])
+        monthEntries.forEach(([month, count]) => rows.push([month, String(count ?? 0)]))
+      }
     }
 
     if (rows.length === 0) return alert('No data to export.')
@@ -196,9 +238,71 @@ const ReportsPage = () => {
     } else if (tabValue === 1) {
       data = reportData.victims
       columns = ['Victim Name', 'Age', 'Gender', 'Case Number', 'Abuse Type']
-    } else {
+    } else if (tabValue === 2) {
       data = reportData.perpetrators
       columns = ['Perpetrator Name', 'Age', 'Gender', 'Case Number', 'Abuse Type']
+    } else {
+      const comp = reportData.comprehensive
+      if (!comp) {
+        return <Box sx={{ py: 4, textAlign: 'center' }}><Typography>No data found for selected dates.</Typography></Box>
+      }
+
+      const metricRows = buildComprehensiveRows(comp)
+      const casesByMonth = comp?.summary?.timeline?.cases_by_month || {}
+      const monthEntries = Object.entries(casesByMonth)
+        .sort(([a], [b]) => a.localeCompare(b))
+
+      return (
+        <Box sx={{ display: 'grid', gap: 3 }}>
+          <Box>
+            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>System Summary</Typography>
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 600 }}>Metric</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>Value</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {metricRows.map(([metric, value]) => (
+                    <TableRow key={metric}>
+                      <TableCell>{metric}</TableCell>
+                      <TableCell>{String(value ?? '')}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+
+          <Box>
+            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>Cases By Month</Typography>
+            {monthEntries.length === 0 ? (
+              <Typography color="text.secondary">No monthly data available for the selected period.</Typography>
+            ) : (
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 600 }}>Month</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Cases</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {monthEntries.map(([month, count]) => (
+                      <TableRow key={month}>
+                        <TableCell>{month}</TableCell>
+                        <TableCell>{count ?? 0}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </Box>
+        </Box>
+      )
     }
 
     if (data.length === 0) {
@@ -254,6 +358,7 @@ const ReportsPage = () => {
           <Tab label="Cases Report" />
           <Tab label="Victims Report" />
           <Tab label="Perpetrators Report" />
+          <Tab label="System Report" />
         </Tabs>
 
         <LocalizationProvider dateAdapter={AdapterDateFns}>

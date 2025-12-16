@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
+import { useSelector } from 'react-redux'
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute'
@@ -26,6 +27,7 @@ import ProfilePage from './pages/ProfilePage'
 
 // Layout
 import MainLayout from './components/Layout/MainLayout'
+import { getHomeRouteForRole, REPORTS_ROLES } from './utils/constants'
 
 const theme = createTheme({
   palette: {
@@ -37,6 +39,12 @@ const theme = createTheme({
     },
   },
 })
+
+const RoleBasedHomeRedirect = () => {
+  const { isAuthenticated, user } = useSelector((state) => state.auth)
+  if (!isAuthenticated) return <Navigate to="/" replace />
+  return <Navigate to={getHomeRouteForRole(user?.role)} replace />
+}
 
 function App() {
   return (
@@ -54,7 +62,9 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<MainLayout />}>
               {/* Dashboard */}
-              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route element={<RoleProtectedRoute allowedRoles={['system_admin', 'admin', 'director', 'focal_person']} />}>
+                <Route path="/dashboard" element={<DashboardPage />} />
+              </Route>
               
               {/* Case Management */}
               <Route path="/cases" element={<CasesPage />} />
@@ -63,7 +73,9 @@ function App() {
               <Route path="/perpetrators" element={<PerpetratorsPage />} />
               <Route path="/children" element={<ChildrenPage />} />
               <Route path="/incidents" element={<IncidentsPage />} />
-              <Route path="/reports" element={<ReportsPage />} />
+              <Route element={<RoleProtectedRoute allowedRoles={REPORTS_ROLES} />}>
+                <Route path="/reports" element={<ReportsPage />} />
+              </Route>
               <Route path="/search" element={<SearchPage />} />
               
               {/* Profile Page - if you want it */}
@@ -82,7 +94,7 @@ function App() {
           </Route>
           
           {/* Redirect to dashboard for any other route for now */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<RoleBasedHomeRedirect />} />
         </Routes>
         </Suspense>
       </BrowserRouter>

@@ -217,10 +217,12 @@ const NewCasePage = () => {
       console.error('Error creating case:', err)
       
       // Handle Laravel validation errors
-      if (err.data && err.data.errors) {
-        const validationErrors = err.data.errors
+      if (err.errors) {
+        const validationErrors = err.errors
         const errorMessages = Object.values(validationErrors).flat().join(', ')
         setError(`Validation errors: ${errorMessages}`)
+      } else if (err.status === 409) {
+        setError(err.message || 'Conflict. Please check your input and try again.')
       } else if (err.status === 401) {
         setError('Session expired. Please login again.')
         setTimeout(() => navigate('/login'), 2000)

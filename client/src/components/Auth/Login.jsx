@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -20,6 +20,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import { setCredentials } from '../../store/authSlice'
 import { authApi } from '../../api/auth'
+import { getHomeRouteForRole } from '../../utils/constants'
 
 const Login = () => {
   const [email, setEmail] = useState('admin@example.com')
@@ -27,6 +28,12 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!error) return
+    const t = setTimeout(() => setError(''), 3000)
+    return () => clearTimeout(t)
+  }, [error])
 
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -53,8 +60,8 @@ const Login = () => {
       
       console.log('Login successful!', { user: data.user.name })
       
-      // Navigate to dashboard
-      navigate('/dashboard')
+      // Navigate to role-appropriate home
+      navigate(getHomeRouteForRole(data.user?.role))
       
     } catch (err) {
       console.error('Login error:', err)

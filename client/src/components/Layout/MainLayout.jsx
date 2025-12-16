@@ -38,6 +38,8 @@ import {
 } from '@mui/icons-material'
 import { useSelector, useDispatch } from 'react-redux'
 import { logout } from '../../store/authSlice' // Updated import path
+import { DASHBOARD_ROLES, REPORTS_ROLES } from '../../utils/constants'
+import { authApi } from '../../api/auth'
 
 const drawerWidth = 280
 
@@ -63,17 +65,21 @@ const MainLayout = () => {
   }, [location.search])
 
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
+    ...(DASHBOARD_ROLES.includes(user?.role)
+      ? [{ text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' }]
+      : []),
     { text: 'Cases', icon: <CasesIcon />, path: '/cases' },
     { text: 'Victims', icon: <VictimsIcon />, path: '/victims' },
     { text: 'Perpetrators', icon: <PerpetratorsIcon />, path: '/perpetrators' },
     { text: 'Children', icon: <ChildrenIcon />, path: '/children' },
     { text: 'Incidents', icon: <IncidentsIcon />, path: '/incidents' },
-    { text: 'Reports', icon: <ReportsIcon />, path: '/reports' },
+    ...(REPORTS_ROLES.includes(user?.role)
+      ? [{ text: 'Reports', icon: <ReportsIcon />, path: '/reports' }]
+      : []),
   ]
 
   if (user?.role === 'system_admin' || user?.role === 'admin' || user?.role === 'director') {
-    menuItems.push({ text: 'Users', icon: <UsersIcon />, path: '/users' })
+    menuItems.push({ text: user?.role === 'director' ? 'Focal Persons' : 'Users', icon: <UsersIcon />, path: '/users' })
   }
 
   if (user?.role === 'system_admin' || user?.role === 'admin') {

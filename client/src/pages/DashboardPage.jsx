@@ -97,6 +97,31 @@ const DashboardPage = () => {
   const navigate = useNavigate()
   const theme = useTheme()
 
+  const DASHBOARD_CACHE_KEY = 'dashboard_cache_v1'
+  const DASHBOARD_CACHE_TTL_MS = 10 * 60 * 1000
+
+  const readDashboardCache = () => {
+    try {
+      const raw = localStorage.getItem(DASHBOARD_CACHE_KEY)
+      if (!raw) return null
+      const parsed = JSON.parse(raw)
+      if (!parsed || typeof parsed !== 'object') return null
+      if (typeof parsed.timestamp !== 'number') return null
+      if (Date.now() - parsed.timestamp > DASHBOARD_CACHE_TTL_MS) return null
+      return parsed
+    } catch {
+      return null
+    }
+  }
+
+  const writeDashboardCache = (payload) => {
+    try {
+      localStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify({ timestamp: Date.now(), ...payload }))
+    } catch {
+      // ignore cache write failures
+    }
+  }
+
   // SNNPR Zone Colors
   const ZONE_COLORS = [
     SNNPR_COLORS.zoneGreen,
@@ -204,51 +229,108 @@ const DashboardPage = () => {
 
     try {
       const currentYear = dayjs().year()
+      const previousYear = currentYear - 1
 
-      const [statsRes, abuseTypeRes, recentCasesRes, yearlyRes] = await Promise.all([
+      const results = await Promise.allSettled([
         dashboardApi.getStats(),
         dashboardApi.getAbuseTypeStats(),
         dashboardApi.getRecentCases(),
         dashboardApi.getYearlyStats(currentYear),
+        dashboardApi.getYearlyStats(previousYear),
       ])
 
-      const statsData = statsRes?.data || statsRes || {}
-      setStats({
-        totalCases: statsData.totalCases ?? statsData.total_cases ?? 0,
-        activeCases: statsData.activeCases ?? statsData.active_cases ?? 0,
-        resolvedCases: statsData.resolvedCases ?? statsData.resolved_cases ?? 0,
-        newThisWeek: statsData.newThisWeek ?? statsData.new_this_week ?? 0,
-        pendingReview: statsData.pendingReview ?? statsData.pending_review ?? 0,
-        zonesCovered: statsData.zonesCovered ?? statsData.zones_covered ?? 0,
-        avgResolutionTime: (statsData.avgResolutionTime ?? statsData.avg_resolution_time ?? 0).toString(),
+      const [statsRes, abuseTypeRes, recentCasesRes, yearlyRes, prevYearlyRes] = results
+
+      let nextStats = null
+      if (statsRes.status === 'fulfilled') {
+        const statsData = statsRes.value?.data || statsRes.value || {}
+        nextStats = {
+          totalCases: statsData.totalCases ?? statsData.total_cases ?? 0,
+          activeCases: statsData.activeCases ?? statsData.active_cases ?? statsData.open_cases ?? 0,
+          resolvedCases: statsData.resolvedCases ?? statsData.resolved_cases ?? statsData.closed_cases ?? 0,
+          newThisWeek: statsData.newThisWeek ?? statsData.new_this_week ?? 0,
+          pendingReview: statsData.pendingReview ?? statsData.pending_review ?? 0,
+          zonesCovered: statsData.zonesCovered ?? statsData.zones_covered ?? 0,
+          avgResolutionTime: (statsData.avgResolutionTime ?? statsData.avg_resolution_time ?? 0).toString(),
+        }
+        setStats(nextStats)
+      }
+
+      let nextAbuseTypeData = null
+      if (abuseTypeRes.status === 'fulfilled') {
+        const abuseData = abuseTypeRes.value?.data || abuseTypeRes.value || []
+        nextAbuseTypeData = Array.isArray(abuseData) ? abuseData : (abuseData.items || [])
+        setAbuseTypeData(nextAbuseTypeData)
+      }
+
+      let recentArr = null
+      if (recentCasesRes.status === 'fulfilled') {
+        const recent = recentCasesRes.value?.data || recentCasesRes.value || []
+        recentArr = Array.isArray(recent) ? recent : (recent.items || [])
+        setRecentCases(recentArr)
+      }
+
+      const yearly = yearlyRes.status === 'fulfilled' ? (yearlyRes.value?.data || yearlyRes.value || {}) : {}
+      const prevYearly = prevYearlyRes.status === 'fulfilled' ? (prevYearlyRes.value?.data || prevYearlyRes.value || {}) : {}
+
+      const toCountMap = (yearlyPayload) => {
+        const y = yearlyPayload?.year
+        const arr = yearlyPayload?.monthly_counts || yearlyPayload?.months || yearlyPayload?.items || []
+        if (!y || !Array.isArray(arr)) return {}
+
+        return arr.reduce((acc, item) => {
+          const monthNumber = Number(item?.month)
+          const total = Number(item?.total ?? item?.cases ?? 0)
+          if (!monthNumber || Number.isNaN(monthNumber)) return acc
+          const key = `${y}-${String(monthNumber).padStart(2, '0')}`
+          acc[key] = total
+          return acc
+        }, {})
+      }
+
+      const counts = {
+        ...toCountMap(prevYearly),
+        ...toCountMap(yearly),
+      }
+
+      const lastSix = Array.from({ length: 6 }, (_, idx) => {
+        const d = dayjs().subtract(5 - idx, 'month')
+        const key = d.format('YYYY-MM')
+        const value = counts[key] ?? 0
+        return {
+          month: d.format('MMM'),
+          cases: value,
+          trend: value,
+        }
       })
-
-      const abuseData = abuseTypeRes?.data || abuseTypeRes || []
-      setAbuseTypeData(Array.isArray(abuseData) ? abuseData : (abuseData.items || []))
-
-      const recent = recentCasesRes?.data || recentCasesRes || []
-      const recentArr = Array.isArray(recent) ? recent : (recent.items || [])
-      setRecentCases(recentArr)
-
-      const yearly = yearlyRes?.data || yearlyRes || {}
-      const monthsArr = yearly.months || yearly.items || []
-      const normalizedMonths = monthsArr.map((m) => ({
-        month: m.label || m.month || m.name,
-        cases: m.cases ?? m.total ?? 0,
-        trend: m.trend ?? m.cases ?? m.total ?? 0,
-      }))
-      const lastSix = normalizedMonths.slice(-6)
       setMonthlyCases(lastSix)
 
-      const zoneCounts = {}
-      recentArr.forEach((c) => {
-        const zoneName = c.zone || c.zone_name || c.location_zone || 'Unknown'
-        zoneCounts[zoneName] = (zoneCounts[zoneName] || 0) + 1
+      let zones = null
+      if (recentArr) {
+        const zoneCounts = {}
+        recentArr.forEach((c) => {
+          const zoneName = c.zone || c.zone_name || c.location_zone || 'Unknown'
+          zoneCounts[zoneName] = (zoneCounts[zoneName] || 0) + 1
+        })
+        zones = Object.entries(zoneCounts)
+          .map(([name, count]) => ({ name, cases: count }))
+          .sort((a, b) => b.cases - a.cases)
+        setZoneData(zones)
+      }
+
+      const hadAnyFailure = results.some((r) => r.status === 'rejected')
+      if (hadAnyFailure) {
+        setError('Some dashboard data could not be loaded. You can retry.')
+      }
+
+      // Cache whatever we have (new values preferred; fall back to current state).
+      writeDashboardCache({
+        stats: nextStats ?? stats,
+        abuseTypeData: nextAbuseTypeData ?? abuseTypeData,
+        monthlyCases: lastSix,
+        recentCases: recentArr ?? recentCases,
+        zoneData: zones ?? zoneData,
       })
-      const zones = Object.entries(zoneCounts)
-        .map(([name, count]) => ({ name, cases: count }))
-        .sort((a, b) => b.cases - a.cases)
-      setZoneData(zones)
 
     } catch (err) {
       console.error('Error fetching dashboard data:', err)
@@ -259,6 +341,15 @@ const DashboardPage = () => {
   }
 
   useEffect(() => {
+    const cached = readDashboardCache()
+    if (cached) {
+      if (cached.stats) setStats(cached.stats)
+      if (Array.isArray(cached.abuseTypeData)) setAbuseTypeData(cached.abuseTypeData)
+      if (Array.isArray(cached.monthlyCases)) setMonthlyCases(cached.monthlyCases)
+      if (Array.isArray(cached.recentCases)) setRecentCases(cached.recentCases)
+      if (Array.isArray(cached.zoneData)) setZoneData(cached.zoneData)
+    }
+
     fetchDashboardData()
   }, [])
 
@@ -292,38 +383,21 @@ const DashboardPage = () => {
     ? Math.min((stats.activeCases / stats.totalCases) * 100, 100)
     : 0
 
-  if (loading) {
-    return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        bgcolor: SNNPR_COLORS.lightGray,
-      }}>
-        <Box sx={{ textAlign: 'center' }}>
-          <CircularProgress 
-            size={70} 
-            thickness={3}
-            sx={{ 
-              color: SNNPR_COLORS.primary,
-              mb: 3,
-            }} 
-          />
-          <Typography sx={{ color: SNNPR_COLORS.dark, fontSize: '1.125rem' }}>
-            Loading SNNPR Regional Dashboard...
-          </Typography>
-        </Box>
-      </Box>
-    )
-  }
-
   return (
     <Box sx={{ 
       p: 3, 
       bgcolor: SNNPR_COLORS.lightGray,
       minHeight: '100vh',
     }}>
+      {loading && (
+        <LinearProgress
+          sx={{
+            mb: 2,
+            bgcolor: alpha(SNNPR_COLORS.primary, 0.12),
+            '& .MuiLinearProgress-bar': { bgcolor: SNNPR_COLORS.primary },
+          }}
+        />
+      )}
       {error && (
         <Alert
           severity="error"

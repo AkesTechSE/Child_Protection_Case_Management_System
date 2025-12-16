@@ -32,9 +32,11 @@ Route::get('/health', function () {
         ]);
     } catch (\Exception $e) {
         return response()->json([
-            'status' => 'error',
-            'message' => $e->getMessage()
-        ], 500);
+            'status' => 'unhealthy',
+            'message' => 'Database connection failed',
+            'database' => 'disconnected',
+            'timestamp' => now(),
+        ], 503);
     }
 });
 

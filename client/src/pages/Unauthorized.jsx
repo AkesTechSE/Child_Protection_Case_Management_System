@@ -1,9 +1,14 @@
 import { Container, Paper, Typography, Button, Box } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import WarningIcon from '@mui/icons-material/Warning'
+import { useSelector } from 'react-redux'
+import { DASHBOARD_ROLES, getHomeRouteForRole } from '../utils/constants'
 
 const Unauthorized = () => {
   const navigate = useNavigate()
+  const { user } = useSelector((state) => state.auth)
+  const canSeeDashboard = DASHBOARD_ROLES.includes(user?.role)
+  const homePath = getHomeRouteForRole(user?.role)
 
   return (
     <Container maxWidth="sm">
@@ -19,10 +24,10 @@ const Unauthorized = () => {
           </Typography>
           <Button
             variant="contained"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(homePath)}
             sx={{ mr: 2 }}
           >
-            Go to Dashboard
+            {canSeeDashboard ? 'Go to Dashboard' : 'Go to Cases'}
           </Button>
           <Button
             variant="outlined"

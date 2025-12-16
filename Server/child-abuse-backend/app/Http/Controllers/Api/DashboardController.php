@@ -16,6 +16,23 @@ class DashboardController extends Controller
         $openCases = AbuseCase::whereNotIn('status', ['resolved', 'closed'])->count();
         $closedCases = AbuseCase::whereIn('status', ['resolved', 'closed'])->count();
 
+        $newThisWeek = AbuseCase::where('created_at', '>=', now()->subDays(7))->count();
+
+        // Pending Review: treat 'under_investigation' as pending review (per UI requirement).
+        $pendingReview = AbuseCase::whereIn('status', ['under_investigation'])->count();
+
+        // Best-effort: count distinct non-empty locations as zones covered.
+        $zonesCovered = AbuseCase::whereNotNull('location')
+            ->where('location', '<>', '')
+            ->distinct('location')
+            ->count('location');
+
+        // Average resolution time in days for resolved/closed cases when dates exist.
+        $avgResolutionTime = (float) AbuseCase::whereIn('status', ['resolved', 'closed'])
+            ->whereNotNull('resolution_date')
+            ->selectRaw('AVG(DATEDIFF(resolution_date, DATE(created_at))) as avg_days')
+            ->value('avg_days');
+
         $byType = AbuseCase::selectRaw('abuse_type, count(*) as total')
             ->groupBy('abuse_type')
             ->get();
@@ -71,7 +88,16 @@ class DashboardController extends Controller
             });
 
         return response()->json([
+            // Keys expected by the frontend DashboardPage
             'total_cases' => $totalCases,
+            'active_cases' => $openCases,
+            'resolved_cases' => $closedCases,
+            'new_this_week' => $newThisWeek,
+            'pending_review' => $pendingReview,
+            'zones_covered' => $zonesCovered,
+            'avg_resolution_time' => round($avgResolutionTime ?: 0, 1),
+
+            // Backward-compatible/legacy keys
             'open_cases' => $openCases,
             'closed_cases' => $closedCases,
             'by_type' => $byType,
