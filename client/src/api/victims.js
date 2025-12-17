@@ -4,7 +4,7 @@ export const victimApi = {
   getVictims: async (params = {}) => {
     try {
       const res = await api.get('/victims', { params })
-      return { data: res.data, error: null }
+      return { data: res, error: null }
     } catch (error) {
       return { data: null, error }
     }
@@ -13,7 +13,7 @@ export const victimApi = {
   getVictim: async (id) => {
     try {
       const res = await api.get(`/victims/${id}`)
-      return { data: res.data, error: null }
+      return { data: res, error: null }
     } catch (error) {
       return { data: null, error }
     }
@@ -22,7 +22,7 @@ export const victimApi = {
   createVictim: async (data) => {
     try {
       const res = await api.post('/victims', data)
-      return { data: res.data, error: null }
+      return { data: res, error: null }
     } catch (error) {
       return { data: null, error }
     }
@@ -31,7 +31,7 @@ export const victimApi = {
   updateVictim: async (id, data) => {
     try {
       const res = await api.put(`/victims/${id}`, data)
-      return { data: res.data, error: null }
+      return { data: res, error: null }
     } catch (error) {
       return { data: null, error }
     }
@@ -40,7 +40,7 @@ export const victimApi = {
   deleteVictim: async (id) => {
     try {
       const res = await api.delete(`/victims/${id}`)
-      return { data: res.data, error: null }
+      return { data: res, error: null }
     } catch (error) {
       return { data: null, error }
     }

@@ -47,13 +47,22 @@ import { incidentApi } from '../api/incidents'
 import { caseApi } from '../api/cases'
 
 const ABUSE_TYPE_OPTIONS = [
-  { value: 'sexual_abuse', label: 'Sexual Abuse' },
-  { value: 'physical_abuse', label: 'Physical Abuse' },
-  { value: 'emotional_abuse', label: 'Emotional Abuse' },
-  { value: 'neglect', label: 'Neglect' },
-  { value: 'exploitation', label: 'Exploitation' },
-  { value: 'other', label: 'Other' }
-]
+  { value: 'sexual_abuse', label: 'ጾታዊ ጥቃት (Sexual Abuse)' },
+  { value: 'physical_abuse', label: 'አካላዊ ጥቃት (Physical Abuse)' },
+  { value: 'psychological_abuse', label: 'ስነልቦና ጥቃት (Psychological Abuse)' },
+  { value: 'neglect', label: 'ቸልተኝነት (Neglect)' },
+  { value: 'exploitation', label: 'ብዝበዛ (Exploitation)' },
+  { value: 'abduction', label: 'ጠለፋ (Abduction)' },
+  { value: 'early_marriage', label: 'ያለዕድሜ ጋብቻ (Early Marriage)' },
+  { value: 'child_labour', label: 'የሕጻናት ጉልበት ብዝበዛ (Child Labour)' },
+  { value: 'trafficking', label: 'የሕጻናት ዝውውር (Trafficking)' },
+  { value: 'abandonment', label: 'ሕጻናትን መጣል (Abandonment)' },
+  { value: 'forced_recruitment', label: 'በግዴታ መመልመል (Forced Recruitment)' },
+  { value: 'medical_neglect', label: 'የህክምና ቸልተኝነት (Medical Neglect)' },
+  { value: 'educational_neglect', label: 'የትምህርት ቸልተኝነት (Educational Neglect)' },
+  { value: 'emotional_neglect', label: 'የስሜት ቸልተኝነት (Emotional Neglect)' },
+  { value: 'other', label: 'ሌሎች (Other)' }
+];
 
 const LOCATION_TYPE_OPTIONS = [
   { value: 'home', label: 'Home' },
@@ -80,6 +89,27 @@ const IncidentsPage = () => {
   const navigate = useNavigate()
   const { isAuthenticated, isAdmin, isFocalPerson } = useAuth()
   const canModifyIncidents = isAdmin || isFocalPerson
+
+  const dedupeSelectedFiles = (files) => {
+    const list = Array.isArray(files) ? files : []
+    const unique = []
+    const seen = new Set()
+
+    for (const file of list) {
+      if (!file) continue
+      const name = typeof file.name === 'string' ? file.name : ''
+      const size = typeof file.size === 'number' ? file.size : ''
+      // Some browsers/Windows setups can produce duplicate File entries with differing lastModified.
+      // Keying on name+size is a practical dedupe strategy for UI display.
+      const key = `${name}::${size}`
+
+      if (seen.has(key)) continue
+      seen.add(key)
+      unique.push(file)
+    }
+
+    return unique
+  }
 
   const toDateTimeInputValue = (value) => {
     if (!value) return ''
@@ -287,13 +317,18 @@ const IncidentsPage = () => {
   const getAbuseTypeLabel = (type) => {
     if (!type) return 'Unknown'
     const labels = {
-      sexual_abuse: 'Sexual Abuse',
-      physical_abuse: 'Physical Abuse',
-      emotional_abuse: 'Emotional Abuse',
-      neglect: 'Neglect',
-      exploitation: 'Exploitation',
-      other: 'Other'
-    }
+  sexual_abuse: 'ጾታዊ ጥቃት (Sexual Abuse)',
+  physical_abuse: 'አካላዊ ጥቃት (Physical Abuse)',
+  emotional_abuse: 'ስነልቦና ጥቃት (Emotional Abuse)',
+  neglect: 'ቸልተኝነት (Neglect)',
+  exploitation: 'ብዝበዛ (Exploitation)',
+  abduction: 'ጠለፋ (Abduction)',
+  early_marriage: 'ያለዕድሜ ጋብቻ (Early Marriage)',
+  child_labour: 'የሕጻናት ጉልበት ብዝበዛ (Child Labour)',
+  trafficking: 'የሕጻናት ዝውውር (Trafficking)',
+  abandonment: 'ሕጻናትን መጣል (Abandonment)',
+  other: 'ሌሎች (Other)'
+};
     return labels[type.toLowerCase()] || type.replace('_', ' ')
   }
 
@@ -597,8 +632,8 @@ const IncidentsPage = () => {
                 label="Location Type"
                 value={formData.location_type || ''}
                 onChange={(e) => setFormData({ ...formData, location_type: e.target.value })}
-                helperText={getFieldError('location_type')}
-                error={!!getFieldError('location_type')}
+                helperText={getFieldError('Location of Incident')}
+                error={!!getFieldError('Location of Incident')}
               >
                 {LOCATION_TYPE_OPTIONS.map((option) => (
                   <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
@@ -628,8 +663,8 @@ const IncidentsPage = () => {
                 label="Detailed Description"
                 value={formData.detailed_description || ''}
                 onChange={(e) => setFormData({ ...formData, detailed_description: e.target.value })}
-                helperText={getFieldError('detailed_description')}
-                error={!!getFieldError('detailed_description')}
+                helperText={getFieldError('Detailed Description of Harm')}
+                error={!!getFieldError('Detailed Description of Harm')}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -640,8 +675,8 @@ const IncidentsPage = () => {
                 inputProps={{ min: 0 }}
                 value={formData.prior_reports_count}
                 onChange={(e) => setFormData({ ...formData, prior_reports_count: e.target.value })}
-                helperText={getFieldError('prior_reports_count')}
-                error={!!getFieldError('prior_reports_count')}
+                helperText={getFieldError('Prior Abuse Reports')}
+                error={!!getFieldError('Prior Abuse Reports')}
               />
             </Grid>
             <Grid item xs={12}>
@@ -651,7 +686,12 @@ const IncidentsPage = () => {
                   type="file"
                   hidden
                   multiple
-                  onChange={(event) => setEvidenceFiles(Array.from(event.target.files || []))}
+                  onChange={(event) => {
+                    const files = Array.from(event.target.files || [])
+                    setEvidenceFiles(dedupeSelectedFiles(files))
+                    // Reset input so selecting the same file again triggers change
+                    event.target.value = ''
+                  }}
                 />
               </Button>
               {evidenceFiles.length > 0 && (

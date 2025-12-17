@@ -9,8 +9,6 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\CaseController;
 use App\Http\Controllers\Api\VictimController;
 use App\Http\Controllers\Api\PerpetratorController;
-use App\Http\Controllers\Api\ChildController;
-use App\Http\Controllers\Api\IncidentController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ReportController;
 
@@ -87,6 +85,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}/notes', [CaseController::class, 'getNotes']);
         Route::post('/{id}/notes', [CaseController::class, 'addNote']);
         Route::delete('/{id}/notes/{noteId}', [CaseController::class, 'deleteNote']);
+
+        // Evidence attachments (merged from incidents)
+        Route::get('/{id}/attachments', [CaseController::class, 'getAttachments']);
+        Route::post('/{id}/attachments', [CaseController::class, 'uploadAttachments']);
+        Route::delete('/{id}/attachments', [CaseController::class, 'removeAttachment']);
+        Route::get('/{id}/attachments/download', [CaseController::class, 'downloadAttachment']);
     });
 
     /*
@@ -111,35 +115,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [PerpetratorController::class, 'show']);
         Route::put('/{id}', [PerpetratorController::class, 'update']);
         Route::delete('/{id}', [PerpetratorController::class, 'destroy']);
-    });
-
-    /*
-    |----------------------- Children ----------------------
-    */
-    Route::prefix('children')->group(function () {
-        Route::get('/', [ChildController::class, 'index']);
-        Route::post('/', [ChildController::class, 'store']);
-        Route::get('/{id}', [ChildController::class, 'show']);
-        Route::put('/{id}', [ChildController::class, 'update']);
-        Route::delete('/{id}', [ChildController::class, 'destroy']);
-    });
-
-    /*
-    |---------------------- Incidents ----------------------
-    */
-    Route::prefix('incidents')->group(function () {
-        Route::get('/', [IncidentController::class, 'index']);
-        Route::post('/', [IncidentController::class, 'store']);
-        Route::get('/{id}', [IncidentController::class, 'show']);
-        Route::put('/{id}', [IncidentController::class, 'update']);
-        Route::delete('/{id}', [IncidentController::class, 'destroy']);
-        Route::get('/case/{caseId}', [IncidentController::class, 'getCaseIncidents']);
-        Route::get('/{id}/attachments', [IncidentController::class, 'getAttachments']);
-
-        // Attachment routes
-        Route::post('/{id}/attachments', [IncidentController::class, 'uploadAttachments']);
-        Route::delete('/{id}/attachments', [IncidentController::class, 'removeAttachment']);
-        Route::get('/{id}/attachments/download', [IncidentController::class, 'downloadAttachment']);
     });
 
     /*

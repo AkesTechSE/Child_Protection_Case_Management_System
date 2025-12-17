@@ -18,7 +18,6 @@ import ReportIcon from '@mui/icons-material/Report'
 import PersonIcon from '@mui/icons-material/Person'
 import ExpandLess from '@mui/icons-material/ExpandLess'
 import ExpandMore from '@mui/icons-material/ExpandMore'
-import ChildCareIcon from '@mui/icons-material/ChildCare'
 import { useSelector } from 'react-redux'
 import { DASHBOARD_ROLES, REPORTS_ROLES } from '../../utils/constants'
 
@@ -39,15 +38,9 @@ const Sidebar = () => {
       text: 'Cases', 
       icon: <AssignmentIcon />, 
       path: '/cases',
-      subItems: [
-        { text: 'All Cases', path: '/cases' },
-        { text: 'New Case', path: '/cases/new' },
-      ]
     },
     { text: 'Victims', icon: <PeopleIcon />, path: '/victims' },
     { text: 'Perpetrators', icon: <GavelIcon />, path: '/perpetrators' },
-    { text: 'Children', icon: <ChildCareIcon />, path: '/children' },
-    { text: 'Incidents', icon: <ReportIcon />, path: '/incidents' },
     ...(REPORTS_ROLES.includes(user?.role)
       ? [{ text: 'Reports', icon: <ReportIcon />, path: '/reports' }]
       : []),

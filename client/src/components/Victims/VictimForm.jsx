@@ -14,25 +14,34 @@ import dayjs from "dayjs";
 
 const genders = ["male", "female", "other"];
 const relationshipOptions = [
-  "Parent",
-  "Stepparent",
-  "Grandparent",
-  "Relative",
-  "Babysitter",
-  "Teacher",
-  "Stranger",
+  'ወላጅ (Parent)',
+  'የእንጀራ ወላጅ (Stepparent)',
+  'አያት (Grandparent)',
+  'ዘመድ (Relative)',
+  'ሕጻን ጠባቂ/ሞግዚት (Babysitter)',
+  'መምህር (Teacher)',
+  'ጎረቤት (Neighbor)',
+  'አሰሪ (Employer)',
+  'እኩያ (Peer)',
+  'እንግዳ/የማይታወቅ ሰው (Stranger)',
+  'ሌላ (Other)'
 ];
 
 const VictimForm = ({ initialData, cases = [], onSubmit, onCancel }) => {
   const [form, setForm] = useState({
     case_id: "",
     first_name: "",
+    middle_name: "",
     last_name: "",
     gender: "",
     age: "",
     date_of_birth: "",
     contact_number: "",
     address: "",
+    current_address: "",
+    address_history: "",
+    guardian_phone: "",
+    guardian_email: "",
     relationship_to_perpetrator: "",
     description: "",
     additional_info: "",
@@ -54,6 +63,12 @@ const VictimForm = ({ initialData, cases = [], onSubmit, onCancel }) => {
           ? dayjs(initialData.date_of_birth).format("YYYY-MM-DD")
           : "",
         relationship_to_perpetrator: normalizedRelationship,
+        additional_info:
+          initialData.additional_info == null
+            ? ""
+            : typeof initialData.additional_info === "string"
+              ? initialData.additional_info
+              : JSON.stringify(initialData.additional_info, null, 2),
       });
     }
   }, [initialData]);
@@ -106,6 +121,17 @@ const VictimForm = ({ initialData, cases = [], onSubmit, onCancel }) => {
               value={form.first_name}
               onChange={handleChange}
               required
+            />
+          </Grid>
+
+          {/* MIDDLE NAME */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Middle Name"
+              name="middle_name"
+              fullWidth
+              value={form.middle_name}
+              onChange={handleChange}
             />
           </Grid>
 
@@ -186,6 +212,54 @@ const VictimForm = ({ initialData, cases = [], onSubmit, onCancel }) => {
               onChange={handleChange}
               multiline
               rows={2}
+            />
+          </Grid>
+
+          {/* CURRENT ADDRESS */}
+          <Grid item xs={12}>
+            <TextField
+              label="Current Address"
+              name="current_address"
+              fullWidth
+              value={form.current_address}
+              onChange={handleChange}
+              multiline
+              rows={2}
+            />
+          </Grid>
+
+          {/* ADDRESS HISTORY */}
+          <Grid item xs={12}>
+            <TextField
+              label="Address History"
+              name="address_history"
+              fullWidth
+              value={form.address_history}
+              onChange={handleChange}
+              multiline
+              rows={2}
+            />
+          </Grid>
+
+          {/* GUARDIAN PHONE */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Guardian Phone"
+              name="guardian_phone"
+              fullWidth
+              value={form.guardian_phone}
+              onChange={handleChange}
+            />
+          </Grid>
+
+          {/* GUARDIAN EMAIL */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Guardian Email"
+              name="guardian_email"
+              fullWidth
+              value={form.guardian_email}
+              onChange={handleChange}
             />
           </Grid>
 

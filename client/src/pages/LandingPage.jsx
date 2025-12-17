@@ -155,7 +155,7 @@ const LandingPage = () => {
           <Grid item xs={12} md={6}>
             <Stack spacing={2.5} sx={{ maxWidth: 560, pt: { xs: 2, md: 6 } }}>
               <Typography variant="h3" sx={{ fontWeight: 800, lineHeight: 1.15, letterSpacing: -0.3 }}>
-                Protect children across SNNPR with one unified platform.
+                Protect children across Arba Minch and surrounding areas with one unified platform.
               </Typography>
               <Typography sx={{ color: "text.secondary", fontSize: "1.05rem", lineHeight: 1.7 }}>
                 Record and track cases, coordinate follow-ups across zones, and generate consistent reports—securely.

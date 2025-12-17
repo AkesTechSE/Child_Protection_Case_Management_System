@@ -27,8 +27,6 @@ import {
   Folder as CasesIcon,
   Person as VictimsIcon,
   Gavel as PerpetratorsIcon,
-  ChildCare as ChildrenIcon,
-  Report as IncidentsIcon,
   Assessment as ReportsIcon,
   People as UsersIcon,
   Settings as SettingsIcon,
@@ -68,11 +66,9 @@ const MainLayout = () => {
     ...(DASHBOARD_ROLES.includes(user?.role)
       ? [{ text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' }]
       : []),
-    { text: 'Cases', icon: <CasesIcon />, path: '/cases' },
-    { text: 'Victims', icon: <VictimsIcon />, path: '/victims' },
-    { text: 'Perpetrators', icon: <PerpetratorsIcon />, path: '/perpetrators' },
-    { text: 'Children', icon: <ChildrenIcon />, path: '/children' },
-    { text: 'Incidents', icon: <IncidentsIcon />, path: '/incidents' },
+    { text: 'ድርጊቶች (Cases)', icon: <CasesIcon />, path: '/cases' },
+    { text: 'ተጎጂዎች (Victims)', icon: <VictimsIcon />, path: '/victims' },
+    { text: 'አጥፊዎች (Perpetrators)', icon: <PerpetratorsIcon />, path: '/perpetrators' },
     ...(REPORTS_ROLES.includes(user?.role)
       ? [{ text: 'Reports', icon: <ReportsIcon />, path: '/reports' }]
       : []),
@@ -110,9 +106,8 @@ const MainLayout = () => {
   // Mock notification fetch; replace with API call when backend endpoint is available
   useEffect(() => {
     const items = [
-      { id: 1, text: 'New case assigned to you', time: '2 hours ago', path: '/cases' },
+      { id: 1, text: 'New case assigned to you', time: '1 minute ago', path: '/cases' },
       { id: 2, text: 'Follow-up required for CASE-001', time: '1 day ago', path: '/cases' },
-      { id: 3, text: 'Incident report awaiting review', time: '3 days ago', path: '/incidents' },
     ]
     setNotifications(items)
     setUnreadCount(items.length)
@@ -349,9 +344,9 @@ const MainLayout = () => {
               </MenuItem>
             ))}
             <Divider />
-            <MenuItem onClick={() => { navigate('/incidents'); handleNotificationsClose() }}>
+            <MenuItem onClick={() => { navigate('/cases'); handleNotificationsClose() }}>
               <ListItemIcon>
-                <IncidentsIcon fontSize="small" />
+                <CasesIcon fontSize="small" />
               </ListItemIcon>
               <ListItemText primary="View all alerts" />
             </MenuItem>

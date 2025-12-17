@@ -25,6 +25,9 @@ class AbuseCase extends Model
         'location',
         'incident_date',
         'reporting_date',
+        'report_datetime',
+        'incident_datetime',
+        'incident_end_datetime',
         'status',
         'assigned_to',
         'follow_up_date',
@@ -32,14 +35,22 @@ class AbuseCase extends Model
         'resolution_details',
         'notes',
         'additional_info',
+        'location_type',
+        'detailed_description',
+        'evidence_files',
+        'prior_reports_count',
     ];
 
     protected $casts = [
         'incident_date' => 'date',
         'reporting_date' => 'datetime',
+        'report_datetime' => 'datetime',
+        'incident_datetime' => 'datetime',
+        'incident_end_datetime' => 'datetime',
         'follow_up_date' => 'date',
         'resolution_date' => 'date',
         'additional_info' => 'array',
+        'evidence_files' => 'array',
     ];
 
     // relations
@@ -51,16 +62,6 @@ class AbuseCase extends Model
     public function victims(): HasMany
     {
         return $this->hasMany(Victim::class, 'case_id');
-    }
-
-    public function children(): HasMany
-    {
-        return $this->hasMany(Child::class, 'case_id');
-    }
-
-    public function incidents(): HasMany
-    {
-        return $this->hasMany(Incident::class, 'case_id');
     }
 
     public function perpetrators(): BelongsToMany

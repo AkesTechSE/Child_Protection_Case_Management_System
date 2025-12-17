@@ -19,8 +19,6 @@ import { Search as SearchIcon, Refresh as RefreshIcon } from '@mui/icons-materia
 import { caseApi } from '../api/cases'
 import { victimApi } from '../api/victims'
 import { perpetratorApi } from '../api/perpetrators'
-import { childApi } from '../api/children'
-import { incidentApi } from '../api/incidents'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 const useQuery = () => new URLSearchParams(useLocation().search)
@@ -63,15 +61,11 @@ const SearchPage = () => {
   const [cases, setCases] = useState([])
   const [victims, setVictims] = useState([])
   const [perps, setPerps] = useState([])
-  const [children, setChildren] = useState([])
-  const [incidents, setIncidents] = useState([])
 
   const [loading, setLoading] = useState({
     cases: false,
     victims: false,
     perps: false,
-    children: false,
-    incidents: false,
   })
   const [errors, setErrors] = useState({})
 
@@ -81,14 +75,12 @@ const SearchPage = () => {
 
   const fetchData = async () => {
     setErrors({})
-    setLoading({ cases: true, victims: true, perps: true, children: true, incidents: true })
+    setLoading({ cases: true, victims: true, perps: true })
     try {
-      const [casesRes, victimsRes, perpsRes, childrenRes, incidentsRes] = await Promise.allSettled([
+      const [casesRes, victimsRes, perpsRes] = await Promise.allSettled([
         caseApi.getCases({ per_page: 200 }),
-          victimApi.getVictims?.({ per_page: 200 }) || victimApi.getVictims?.(),
+        victimApi.getVictims?.({ per_page: 200 }) || victimApi.getVictims?.(),
         perpetratorApi.getPerpetrators?.({ per_page: 200 }) || perpetratorApi.getPerpetrators?.(),
-        childApi.getChildren?.({ per_page: 200 }) || childApi.getChildren?.(),
-        incidentApi.getIncidents?.({ per_page: 200 }) || incidentApi.getIncidents?.(),
       ])
 
       const normalize = (res) => {
@@ -100,18 +92,14 @@ const SearchPage = () => {
       setCases(normalize(casesRes))
       setVictims(normalize(victimsRes))
       setPerps(normalize(perpsRes))
-      setChildren(normalize(childrenRes))
-      setIncidents(normalize(incidentsRes))
     } catch (err) {
       // Errors captured per promise above
     } finally {
-      setLoading({ cases: false, victims: false, perps: false, children: false, incidents: false })
+      setLoading({ cases: false, victims: false, perps: false })
       setErrors({
         cases: cases instanceof Error ? cases.message : '',
         victims: victims instanceof Error ? victims.message : '',
         perps: perps instanceof Error ? perps.message : '',
-        children: children instanceof Error ? children.message : '',
-        incidents: incidents instanceof Error ? incidents.message : '',
       })
     }
   }
@@ -122,11 +110,9 @@ const SearchPage = () => {
 
   const filtered = useMemo(() => ({
     cases: filterItems(cases, term, ['case_title', 'case_number', 'abuse_type', 'status', 'location']),
-    victims: filterItems(victims, term, ['name', 'gender', 'zone', 'woreda']),
-    perps: filterItems(perps, term, ['name', 'gender', 'zone', 'woreda']),
-    children: filterItems(children, term, ['name', 'gender', 'zone', 'woreda']),
-    incidents: filterItems(incidents, term, ['title', 'description', 'status', 'location']),
-  }), [cases, victims, perps, children, incidents, term])
+    victims: filterItems(victims, term, ['first_name', 'middle_name', 'last_name', 'gender', 'contact_number', 'child_contact']),
+    perps: filterItems(perps, term, ['first_name', 'last_name', 'gender', 'phone', 'contact_number']),
+  }), [cases, victims, perps, term])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -141,7 +127,7 @@ const SearchPage = () => {
         <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
-            placeholder="Search across cases, victims, perpetrators, children, incidents"
+            placeholder="Search across cases, victims, perpetrators"
             value={term}
             onChange={(e) => setTerm(e.target.value)}
             InputProps={{
@@ -188,8 +174,8 @@ const SearchPage = () => {
             renderItem={(v) => (
               <ListItem key={`victim-${v.id}`}>
                 <ListItemText
-                  primary={v.name || 'Unknown victim'}
-                  secondary={[v.gender, v.zone, v.woreda].filter(Boolean).join(' • ') || 'No details'}
+                  primary={[v.first_name, v.middle_name, v.last_name].filter(Boolean).join(' ') || 'Unknown victim'}
+                  secondary={[v.gender, v.contact_number, v.child_contact].filter(Boolean).join(' • ') || 'No details'}
                 />
               </ListItem>
             )}
@@ -206,44 +192,8 @@ const SearchPage = () => {
             renderItem={(p) => (
               <ListItem key={`perp-${p.id}`}>
                 <ListItemText
-                  primary={p.name || 'Unknown perpetrator'}
-                  secondary={[p.gender, p.zone, p.woreda].filter(Boolean).join(' • ') || 'No details'}
-                />
-              </ListItem>
-            )}
-          />
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Section
-            title="Children"
-            loading={loading.children}
-            error={errors.children}
-            items={filtered.children}
-            emptyLabel="No matching children"
-            renderItem={(ch) => (
-              <ListItem key={`child-${ch.id}`}>
-                <ListItemText
-                  primary={ch.name || 'Unknown child'}
-                  secondary={[ch.gender, ch.zone, ch.woreda].filter(Boolean).join(' • ') || 'No details'}
-                />
-              </ListItem>
-            )}
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <Section
-            title="Incidents"
-            loading={loading.incidents}
-            error={errors.incidents}
-            items={filtered.incidents}
-            emptyLabel="No matching incidents"
-            renderItem={(inc) => (
-              <ListItem key={`incident-${inc.id}`}>
-                <ListItemText
-                  primary={inc.title || inc.description || 'Incident'}
-                  secondary={[inc.status, inc.location].filter(Boolean).join(' • ') || 'No details'}
+                  primary={[p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown perpetrator'}
+                  secondary={[p.gender, p.phone || p.contact_number].filter(Boolean).join(' • ') || 'No details'}
                 />
               </ListItem>
             )}

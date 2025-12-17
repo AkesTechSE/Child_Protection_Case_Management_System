@@ -57,23 +57,36 @@ const PerpetratorsPage = () => {
   ]
 
   const ABUSE_TYPES = [
-    { value: 'sexual_abuse', label: 'Sexual Abuse' },
-    { value: 'physical_abuse', label: 'Physical Abuse' },
-    { value: 'emotional_abuse', label: 'Emotional Abuse' },
-    { value: 'neglect', label: 'Neglect' },
-    { value: 'exploitation', label: 'Exploitation' },
-    { value: 'other', label: 'Other' },
-  ]
+  { value: 'sexual_abuse', label: 'ጾታዊ ጥቃት (Sexual Abuse)' },
+  { value: 'physical_abuse', label: 'አካላዊ ጥቃት (Physical Abuse)' },
+  { value: 'psychological_abuse', label: 'ስነልቦና ጥቃት (Psychological Abuse)' },
+  { value: 'neglect', label: 'ቸልተኝነት (Neglect)' },
+  { value: 'exploitation', label: 'ብዝበዛ (Exploitation)' },
+  { value: 'abduction', label: 'ጠለፋ (Abduction)' },
+  { value: 'early_marriage', label: 'ያለዕድሜ ጋብቻ (Early Marriage)' },
+  { value: 'child_labour', label: 'የሕጻናት ጉልበት ብዝበዛ (Child Labour)' },
+  { value: 'trafficking', label: 'የሕጻናት ዝውውር (Trafficking)' },
+  { value: 'abandonment', label: 'ሕጻናትን መጣል (Abandonment)' },
+  { value: 'forced_recruitment', label: 'በግዴታ መመልመል (Forced Recruitment)' },
+  { value: 'medical_neglect', label: 'የህክምና ቸልተኝነት (Medical Neglect)' },
+  { value: 'educational_neglect', label: 'የትምህርት ቸልተኝነት (Educational Neglect)' },
+  { value: 'emotional_neglect', label: 'የስሜት ቸልተኝነት (Emotional Neglect)' },
+  { value: 'other', label: 'ሌሎች (Other)' }
+];
 
   const RELATIONSHIP_OPTIONS = [
-    'Parent',
-    'Stepparent',
-    'Grandparent',
-    'Relative',
-    'Babysitter',
-    'Teacher',
-    'Stranger',
-  ]
+  'ወላጅ (Parent)',
+  'የእንጀራ ወላጅ (Stepparent)',
+  'አያት (Grandparent)',
+  'ዘመድ (Relative)',
+  'ሕጻን ጠባቂ/ሞግዚት (Babysitter)',
+  'መምህር (Teacher)',
+  'ጎረቤት (Neighbor)',
+  'አሰሪ (Employer)',
+  'እኩያ (Peer)',
+  'እንግዳ/የማይታወቅ ሰው (Stranger)',
+  'ሌላ (Other)'
+];
 
   useEffect(() => {
     // load everything
@@ -574,18 +587,22 @@ const PerpetratorsPage = () => {
                     <TableCell>
                       {abuseType ? <Chip label={abuseType.replace('_', ' ')} size="small" /> : null}
                     </TableCell>
-                    <TableCell align="center">
-                      <Tooltip title="View">
-                        <IconButton size="small" onClick={() => handleView(p)}><VisibilityIcon /></IconButton>
-                      </Tooltip>
-                      {canModify && <>
-                        <Tooltip title="Edit">
-                          <IconButton size="small" onClick={() => handleOpenEdit(p)}><EditIcon /></IconButton>
+                    <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
+                      <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, flexWrap: 'nowrap' }}>
+                        <Tooltip title="View">
+                          <IconButton size="small" onClick={() => handleView(p)}><VisibilityIcon /></IconButton>
                         </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton size="small" color="error" onClick={() => handleDelete(p.id)}><DeleteIcon /></IconButton>
-                        </Tooltip>
-                      </>}
+                        {canModify && (
+                          <>
+                            <Tooltip title="Edit">
+                              <IconButton size="small" onClick={() => handleOpenEdit(p)}><EditIcon /></IconButton>
+                            </Tooltip>
+                            <Tooltip title="Delete">
+                              <IconButton size="small" color="error" onClick={() => handleDelete(p.id)}><DeleteIcon /></IconButton>
+                            </Tooltip>
+                          </>
+                        )}
+                      </Box>
                     </TableCell>
                   </TableRow>
                   )

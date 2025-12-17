@@ -81,4 +81,50 @@ export const caseApi = {
       return { data: null, error }
     }
   },
+
+  getAttachments: async (id) => {
+    try {
+      const res = await api.get(`/cases/${id}/attachments`)
+      return { data: res, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  },
+
+  uploadAttachments: async (id, files = []) => {
+    try {
+      const formData = new FormData()
+      ;(Array.isArray(files) ? files : []).forEach((f) => {
+        if (f) formData.append('evidence_files[]', f)
+      })
+
+      const res = await api.post(`/cases/${id}/attachments`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      return { data: res, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  },
+
+  removeAttachment: async (id, filename) => {
+    try {
+      const res = await api.delete(`/cases/${id}/attachments`, { data: { filename } })
+      return { data: res, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  },
+
+  downloadAttachment: async (id, filename) => {
+    try {
+      const res = await api.get(`/cases/${id}/attachments/download`, {
+        params: { filename },
+        responseType: 'blob',
+      })
+      return { data: res, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  },
 }

@@ -14,8 +14,6 @@ const UsersPage = lazy(() => import('./pages/UsersPage'))
 const CasesPage = lazy(() => import('./pages/CasesPage'))
 const VictimsPage = lazy(() => import('./pages/VictimsPage'))
 const PerpetratorsPage = lazy(() => import('./pages/PerpetratorsPage'))
-const ChildrenPage = lazy(() => import('./pages/ChildrenPage'))
-const IncidentsPage = lazy(() => import('./pages/IncidentsPage'))
 const ReportsPage = lazy(() => import('./pages/ReportsPage'))
 const Unauthorized = lazy(() => import('./pages/Unauthorized'))
 const Settings = lazy(() => import('./pages/Settings'))
@@ -71,8 +69,6 @@ function App() {
               <Route path="/cases/:id" element={<CasesPage />} />
               <Route path="/victims" element={<VictimsPage />} />
               <Route path="/perpetrators" element={<PerpetratorsPage />} />
-              <Route path="/children" element={<ChildrenPage />} />
-              <Route path="/incidents" element={<IncidentsPage />} />
               <Route element={<RoleProtectedRoute allowedRoles={REPORTS_ROLES} />}>
                 <Route path="/reports" element={<ReportsPage />} />
               </Route>

@@ -11,6 +11,25 @@ use App\Models\AbuseCase;
 
 class IncidentController extends Controller
 {
+    private const ABUSE_TYPES = [
+        'sexual_abuse',
+        'physical_abuse',
+        'emotional_abuse',
+        'psychological_abuse',
+        'neglect',
+        'exploitation',
+        'abduction',
+        'early_marriage',
+        'child_labour',
+        'trafficking',
+        'abandonment',
+        'forced_recruitment',
+        'medical_neglect',
+        'educational_neglect',
+        'emotional_neglect',
+        'other',
+    ];
+
     public function index(Request $request)
     {
         $query = Incident::with(['case:id,case_number,case_title']);
@@ -62,7 +81,7 @@ class IncidentController extends Controller
             ],
             'abuse_type' => [
                 'required',
-                Rule::in(['sexual_abuse', 'physical_abuse', 'emotional_abuse', 'neglect', 'exploitation', 'other'])
+                Rule::in(self::ABUSE_TYPES)
             ],
             'detailed_description' => 'required|string',
             'prior_reports_count' => 'integer|min:0|max:100',
@@ -121,7 +140,7 @@ class IncidentController extends Controller
             ],
             'abuse_type' => [
                 'sometimes',
-                Rule::in(['sexual_abuse', 'physical_abuse', 'emotional_abuse', 'neglect', 'exploitation', 'other'])
+                Rule::in(self::ABUSE_TYPES)
             ],
             'detailed_description' => 'sometimes|string',
             'prior_reports_count' => 'nullable|integer|min:0|max:100',
