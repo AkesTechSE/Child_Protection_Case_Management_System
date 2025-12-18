@@ -11,7 +11,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>App</title>
+    <title>{{config('app.name')}}</title>
+    <link rel="shortcut icon" href="./safe.png" type="image/x-icon">
 
     @if(isset($entry['css']))
         @foreach($entry['css'] as $css)

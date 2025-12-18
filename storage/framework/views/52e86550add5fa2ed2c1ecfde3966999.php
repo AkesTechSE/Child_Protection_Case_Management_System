@@ -11,7 +11,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>App</title>
+    <title><?php echo e(config('app.name')); ?></title>
+    <link rel="shortcut icon" href="./safe.png" type="image/x-icon">
 
     <?php if(isset($entry['css'])): ?>
         <?php $__currentLoopData = $entry['css']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $css): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
