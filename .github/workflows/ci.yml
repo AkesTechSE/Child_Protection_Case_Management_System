@@ -67,7 +67,7 @@ jobs:
       # Install & Build React
       - name: Build React
         run: |
-          cd react
+          cd front-end
           npm install
           npm run build
 
