@@ -1,20 +1,32 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
-        // Safely revert incidents.location to NOT NULL.
-        // First, replace any NULLs with empty string.
-        DB::statement("UPDATE incidents SET location = '' WHERE location IS NULL");
-        DB::statement('ALTER TABLE incidents MODIFY location TEXT NOT NULL');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE incidents MODIFY location TEXT NOT NULL');
+        } elseif (DB::getDriverName() === 'sqlite') {
+            // SQLite doesn't support MODIFY
+            // Skip or handle differently
+        } else {
+            DB::statement('ALTER TABLE incidents ALTER COLUMN location SET NOT NULL');
+        }
     }
 
-    public function down(): void
+    public function down()
     {
-        DB::statement('ALTER TABLE incidents MODIFY location TEXT NULL');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE incidents MODIFY location TEXT NULL');
+        } elseif (DB::getDriverName() === 'sqlite') {
+            // Skip
+        } else {
+            DB::statement('ALTER TABLE incidents ALTER COLUMN location DROP NOT NULL');
+        }
     }
 };
