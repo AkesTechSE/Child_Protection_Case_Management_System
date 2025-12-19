@@ -94,7 +94,7 @@ jobs:
       - name: Cache Node Modules
         uses: actions/cache@v3
         with:
-          path: react/node_modules
+          path: front-end/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('react/package-lock.json') }}
           restore-keys: ${{ runner.os }}-node-
 
