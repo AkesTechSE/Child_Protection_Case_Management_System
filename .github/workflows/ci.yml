@@ -79,3 +79,52 @@ jobs:
           php artisan migrate --force
           php artisan test
 
+# -------------------------------
+  # 2️⃣ Deploy to cPanel via FTP
+  # -------------------------------
+  deploy:
+    name: Deploy to cPanel
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      # Checkout latest code
+      - uses: actions/checkout@v4
+
+      # Cache Node modules (optional)
+      - name: Cache Node Modules
+        uses: actions/cache@v3
+        with:
+          path: react/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('react/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-
+
+      # Build React again (optional, safe)
+      - name: Build React (Deploy)
+        run: |
+          cd react
+          npm install
+          npm run build
+
+      # Install Laravel dependencies
+      - name: Install Composer
+        run: composer install --no-dev --optimize-autoloader
+
+      # Directory permissions
+      - name: Set Permissions
+        run: chmod -R 775 storage bootstrap/cache
+
+      # Sync to cPanel via FTP
+      - name: FTP Deploy
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER_G }}
+          username: ${{ secrets.FTP_USERNAME_G }}
+          password: ${{ secrets.FTP_PASSWORD_G }}
+          server-dir: /
+          log-level: minimal
+          exclude: |
+            **/.git*
+            **/node_modules/**
+            react/**
+            tests/**
+            resources/**
