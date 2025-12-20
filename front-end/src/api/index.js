@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const DEFAULT_API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const DEFAULT_API_BASE_URL = 'https://https://perpetrators.et/api' || 'http://localhost:8000/api'
 
 const api = axios.create({
   baseURL: DEFAULT_API_BASE_URL,
