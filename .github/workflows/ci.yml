@@ -95,13 +95,13 @@ jobs:
         uses: actions/cache@v3
         with:
           path: front-end/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('react/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('front-end/package-lock.json') }}
           restore-keys: ${{ runner.os }}-node-
 
       # Build React again (optional, safe)
       - name: Build React (Deploy)
         run: |
-          cd react
+          cd front-end
           npm install
           npm run build
 
@@ -127,4 +127,4 @@ jobs:
             **/node_modules/**
             react/**
             tests/**
-            resources/**
+            
