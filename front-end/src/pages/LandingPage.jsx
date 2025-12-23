@@ -119,7 +119,7 @@ const LandingPage = () => {
                   Child and Women  Case Management System
                 </Typography>
                 <Typography sx={{ color: "text.secondary", fontSize: 13 }}>
-                  Gamo Zone, Ethiopia
+                  Gamo Zone, South Ethiopia
                 </Typography>
               </Box>
             </Stack>
