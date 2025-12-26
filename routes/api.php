@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\NotificationController;
 
 // Controllers
 use App\Http\Controllers\Api\AuthController;
@@ -145,4 +146,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/incidents', [ReportController::class, 'incidentReport']);
         Route::get('/comprehensive', [ReportController::class, 'comprehensiveReport']);
     });
+
+        /*
+        |------------------- Notifications -------------------
+        */
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::post('/notifications', [NotificationController::class, 'store']);
+        Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
 });

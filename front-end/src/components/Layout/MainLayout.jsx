@@ -38,6 +38,8 @@ import { useSelector, useDispatch } from 'react-redux'
 import { logout } from '../../store/authSlice' // Updated import path
 import { DASHBOARD_ROLES, REPORTS_ROLES } from '../../utils/constants'
 import { authApi } from '../../api/auth'
+import { fetchNotifications, markNotificationAsRead } from '../../api/notifications'
+import { timeAgo } from '../../utils/timeAgo'
 
 const drawerWidth = 280
 
@@ -94,24 +96,44 @@ const MainLayout = () => {
     setAnchorEl(null)
   }
 
-  const handleNotificationsOpen = (event) => {
-    setNotificationsAnchorEl(event.currentTarget)
-    setUnreadCount(0)
-  }
+  // (Removed duplicate handleNotificationsOpen, async version is below)
 
   const handleNotificationsClose = () => {
     setNotificationsAnchorEl(null)
   }
 
-  // Mock notification fetch; replace with API call when backend endpoint is available
+  // Fetch notifications from backend
   useEffect(() => {
-    const items = [
-      { id: 1, text: 'New case assigned to you', time: '1 minute ago', path: '/cases' },
-      { id: 2, text: 'Follow-up required for CASE-001', time: '1 day ago', path: '/cases' },
-    ]
-    setNotifications(items)
-    setUnreadCount(items.length)
+    const loadNotifications = async () => {
+      try {
+        const data = await fetchNotifications()
+        setNotifications(data)
+        setUnreadCount(data.filter((n) => !n.read_at).length)
+      } catch (e) {
+        setNotifications([])
+        setUnreadCount(0)
+      }
+    }
+    loadNotifications()
   }, [])
+
+  // Mark all as read when opening notifications
+  const handleNotificationsOpen = async (event) => {
+    setNotificationsAnchorEl(event.currentTarget)
+    // Mark unread notifications as read
+    const unread = notifications.filter((n) => !n.read_at)
+    if (unread.length > 0) {
+      await Promise.all(unread.map((n) => markNotificationAsRead(n.id)))
+      // Refresh notifications
+      try {
+        const data = await fetchNotifications()
+        setNotifications(data)
+        setUnreadCount(0)
+      } catch {}
+    } else {
+      setUnreadCount(0)
+    }
+  }
 
   const handleLogout = async () => {
     try {
@@ -334,11 +356,11 @@ const MainLayout = () => {
               </MenuItem>
             )}
             {notifications.map((n) => (
-              <MenuItem key={n.id} onClick={() => { if (n.path) navigate(n.path); handleNotificationsClose() }}>
+              <MenuItem key={n.id} onClick={() => { if (n.data?.path) navigate(n.data.path); handleNotificationsClose() }} selected={!n.read_at}>
                 <Box>
-                  <Typography variant="body2">{n.text}</Typography>
+                  <Typography variant="body2">{n.data?.text || n.type}</Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {n.time}
+                    {timeAgo(n.created_at)}
                   </Typography>
                 </Box>
               </MenuItem>
